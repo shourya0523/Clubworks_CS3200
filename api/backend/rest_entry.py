@@ -36,7 +36,20 @@ def create_app():
     db.init_app(app)
 
     @app.route("/")
-    def welcome 
+    def welcome ():
+
+        return "<h1> Welcome to the Fall 2025 CS 3200 Project Template Repo</h1>"
+    
+    @app.route ("/")
+    def getData(): 
+        data = {
+            "users" : [
+                {
+                    "Name": "Shravani Ashtekar",
+                    "role": "bestie"
+                },
+                ]
+        }
 
     # Register the routes from each Blueprint with the app object
     # and give a url prefix to each
