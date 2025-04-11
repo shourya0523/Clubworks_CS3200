@@ -40,7 +40,7 @@ def create_app():
 
         return "<h1> Welcome to the Fall 2025 CS 3200 Project Template Repo</h1>"
     
-    @app.route ("/")
+    @app.route ("/data")
     def getData(): 
         data = {
             "users" : [
