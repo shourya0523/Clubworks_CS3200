@@ -50,6 +50,7 @@ def create_app():
                 },
                 ]
         }
+        return data
 
     # Register the routes from each Blueprint with the app object
     # and give a url prefix to each
