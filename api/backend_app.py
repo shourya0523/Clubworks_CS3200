@@ -7,7 +7,7 @@
 from backend.rest_entry import create_app
 
 # create the app object
-app = create_app()
+app = create_app() # returns flask object 
 
 if __name__ == '__main__':
     # we want to run in debug mode (for hot reloading) 

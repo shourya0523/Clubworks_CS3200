@@ -3,25 +3,25 @@ services:
     build: ./app
     container_name: web-app
     hostname: web-app
-    volumes: ["./app/src:/appcode"]
+    volumes: ["./app/src:/appcode"] #takes apps sources folder and plugging it into containter called "app code"
     ports:
-      - 8501:8501
+      - 8501:8501 # this is what you will use to access from laptop 
 
   api:
     build: ./api
     container_name: web-api
     hostname: web-api
-    volumes: ["./api:/apicode"]
+    volumes: ["./api:/apicode"] 
     ports:
       - 4000:4000
 
   db:
     env_file:
       - ./api/.env
-    image: mysql:9
+    image: mysql:9 # this will look into whatever in in docker entry point -- will execute every sql file that is in this folder 
     container_name: mysql_db
     hostname: db
     volumes:
       - ./database-files:/docker-entrypoint-initdb.d/:ro
     ports:
-      - 3200:3306
+      - 3200:3306 # port will run on 3200 

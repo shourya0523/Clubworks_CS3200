@@ -4,8 +4,8 @@ from backend.db_connection import db
 from backend.customers.customer_routes import customers
 from backend.products.products_routes import products
 from backend.simple.simple_routes import simple_routes
-import os
-from dotenv import load_dotenv
+import os # HANDLES pads 
+from dotenv import load_dotenv # loads wtv is in env
 
 def create_app():
     app = Flask(__name__)
@@ -35,6 +35,8 @@ def create_app():
     app.logger.info('current_app(): starting the database connection')
     db.init_app(app)
 
+    @app.route("/")
+    def welcome 
 
     # Register the routes from each Blueprint with the app object
     # and give a url prefix to each
