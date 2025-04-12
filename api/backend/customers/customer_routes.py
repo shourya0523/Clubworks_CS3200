@@ -24,11 +24,11 @@ def get_customers():
     cursor = db.get_db().cursor()
     cursor.execute('''SELECT id, company, last_name,
                     first_name, job_title, business_phone FROM customers
-    ''')
+    ''') # asking curor to get this information 
     
-    theData = cursor.fetchall()
+    theData = cursor.fetchall() # this is what is getting the data 
     
-    the_response = make_response(jsonify(theData))
+    the_response = make_response(jsonify(theData)) # sending back the data 
     the_response.status_code = 200
     return the_response
 
