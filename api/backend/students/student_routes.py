@@ -42,11 +42,23 @@ def student_login():
 @students.route('/get_student_profile/<nuid>', methods=['GET'])
 def get_student(nuid):
     query = f'''
-    SELECT *
-    FROM Students s
-    JOIN Images i
-    ON s.ProfileIMG = i.ImageID
-    WHERE s.NUID = {nuid};'''
+    SELECT 
+    s.*,
+    i.ImageID,
+    i.ImageLink,
+    GROUP_CONCAT(ins.InterestName SEPARATOR ', ') AS Interests
+    FROM 
+        Students s
+    JOIN 
+        Images i ON s.ProfileIMG = i.ImageID
+    LEFT JOIN 
+        Interested ind ON ind.NUID = s.NUID
+    LEFT JOIN 
+        Interests ins ON ins.InterestID = ind.InterestID
+    WHERE 
+        s.NUID = {nuid}
+    GROUP BY 
+        s.NUID;'''
         
     cursor = db.get_db().cursor()
     cursor.execute(query)
@@ -133,31 +145,45 @@ def get_followcount(nuid):
     
     return response
 
-@students.route('/follows', methods=['GET'])
-def get_follows():
-    query = '''
-SELECT 
-    follower.NUID AS FollowerID,
-    CONCAT(follower.FirstName, ' ', follower.LastName) AS Follower,
-    followee.NUID AS FolloweeID,
-    CONCAT(followee.FirstName, ' ', followee.LastName) AS Followee
-FROM 
-    Follows f
-JOIN 
-    Students follower ON f.FollowerID = follower.NUID
-JOIN 
-    Students followee ON f.FolloweeID = followee.NUID
-ORDER BY 
-    Follower, Followee;
-    '''
-        
-    cursor = db.get_db().cursor()
-    cursor.execute(query)
-    
-    the_data = cursor.fetchall()
-    
-    response = make_response(jsonify(the_data))
+@students.route('/follows/<nuid>', methods=['GET'])
+def get_follows(nuid):
 
+    followers_query = f'''
+    SELECT 
+        CONCAT(follower.FirstName, ' ', follower.LastName) AS FollowerName
+    FROM 
+        Follows f
+    JOIN 
+        Students follower ON f.FollowerID = follower.NUID
+    WHERE 
+        f.FolloweeID = {nuid}
+    '''
+    
+    following_query = f'''
+    SELECT 
+        CONCAT(followee.FirstName, ' ', followee.LastName) AS FollowingName
+    FROM 
+        Follows f
+    JOIN 
+        Students followee ON f.FolloweeID = followee.NUID
+    WHERE 
+        f.FollowerID = {nuid}
+    '''
+    
+    cursor = db.get_db().cursor()
+    
+    cursor.execute(followers_query)
+    followers_data = cursor.fetchall()
+    
+    cursor.execute(following_query)
+    following_data = cursor.fetchall()
+    
+    result = {
+        "followers": [follower["FollowerName"] for follower in followers_data],
+        "following": [following["FollowingName"] for following in following_data]
+    }
+    
+    response = make_response(jsonify(result))
     response.status_code = 200
     
     return response
