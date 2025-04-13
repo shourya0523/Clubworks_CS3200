@@ -66,6 +66,7 @@ def create_app():
     app.register_blueprint(customers,   url_prefix='/c') # collection of related routes  
     app.register_blueprint(products,    url_prefix='/p')
     app.register_blueprint(employees,   url_prefix = '/e')
+    app.register_blueprint(analyst,   url_prefix = '/a')    
     app.register_blueprint(club_president,   url_prefix = '/pres')
     app.register_blueprint(students,   url_prefix = '/s')
 
