@@ -15,7 +15,8 @@ def clubs_with_incomplete_profiles():
     cursor = db.get_db().cursor()
     the_query = '''
     SELECT ClubName, Description, LinkTree, CalendarLink, Complete
-    FROM Clubs;
+    FROM Clubs c
+    WHERE c.Complete = False;
     '''
     cursor.execute(the_query)
     theData = cursor.fetchall()
@@ -25,9 +26,7 @@ def clubs_with_incomplete_profiles():
         the_response.mimetype = 'application/json'
         return the_response
     else:
-        the_response = make_response(theData)
-        the_response.status_code = 200  
-        return None
+        return {'Status':'No Club Registrations are incomplete'}
 
 @admin.route('/memberships', methods = ['GET'])
 def membership_count():
@@ -186,9 +185,13 @@ def students_with_incomplete_profiles():
     '''
     cursor.execute(the_query)
     theData = cursor.fetchall()
-    the_response = make_response(theData)
-    the_response.status_code = 200  
-    the_response.mimetype = 'application/json'
+    if theData:
+        the_response = make_response(theData)
+        the_response.status_code = 200  
+        the_response.mimetype = 'application/json'
+        return the_response
+    else:
+        return {'Status':'No Student Profiles are incomplete'}
     return the_response
 
 @admin.route('/incompleteregistrations', methods = ['GET'])
@@ -202,10 +205,13 @@ def students_with_incomplete_registrations():
     '''
     cursor.execute(the_query)
     theData = cursor.fetchall()
-    the_response = make_response(theData)
-    the_response.status_code = 200  
-    the_response.mimetype = 'application/json'
-    return the_response
+    if theData:
+        the_response = make_response(theData)
+        the_response.status_code = 200  
+        the_response.mimetype = 'application/json'
+        return the_response
+    else:
+        return {'Status':'No Student Registrations are incomplete'}
 
 @admin.route('/eventandmembers', methods = ['GET'])
 def event_and_member_count():

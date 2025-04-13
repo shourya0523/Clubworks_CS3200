@@ -9,13 +9,8 @@ from flask import current_app
 from backend.db_connection import db
 from backend.ml_models.model01 import predict
 
-#------------------------------------------------------------
-# Creating a new Blueprint object, which is a collection of 
-# routes.
 club_president = Blueprint('club_president', __name__)
 
-#------------------------------------------------------------
-# Get all Attendance from the system
 @club_president.route('/attendance', methods=['GET'])
 def get_attendancecount():
 
@@ -39,8 +34,6 @@ def get_attendancecount():
     the_response.mimetype = 'application/json'
     return the_response
 
-#------------------------------------------------------------
-# Insert events info for events with particular EventID
 @club_president.route('/create_event', methods=['PUT'])
 def create_club_event():
     current_app.logger.info('PUT /club_president route')
@@ -54,15 +47,13 @@ def create_club_event():
     poster_img = event_info['PosterImg']
     type = event_info['Type']
 
-    query = 'INSERT INTO Events (Name, Location, StartTime, EndTime, ClubId, Type)'
-    data = (name, location, start_time, end_time, club_id, type, event_id)
+    query = 'INSERT INTO Events (Name, Location, StartTime, EndTime, ClubId, PosterImg, Type) VALUES (%s, %s, %s, %s, %s, %s, %s)'
+    data = (name, location, start_time, end_time, club_id, poster_img, type)
     cursor = db.get_db().cursor()
     r = cursor.execute(query, data)
     db.get_db().commit()
     return 'event created!'
 
-#------------------------------------------------------------
-# Get all Member Contact Information from the system
 @club_president.route('/member_contact_information', methods=['GET'])
 def get_member_contact():
 
@@ -80,8 +71,6 @@ def get_member_contact():
     the_response.mimetype = 'application/json'
     return the_response
 
-#------------------------------------------------------------
-# Insert requests for club presidents with particular request_id
 @club_president.route('/make_request', methods=['PUT'])
 def make_request():
     current_app.logger.info('PUT /club_president route')
@@ -95,15 +84,13 @@ def make_request():
     executive_club = request_info['ExecutiveClub']
     executive_position = request_info['ExecutivePosition']
 
-    query = 'INSERT INTO Requests (Status, Type, ExecutiveID, ExecutiveClub, ExecutivePosition)'
+    query = 'INSERT INTO Requests (RequestDescription, Status, CreatedTime, Type, ExecutiveID, ExecutiveClub, ExecutivePosition) VALUES (%s, %s, %s, %s, %s, %s, %s)'
     data = (request_description, status, created_time, type, executive_id, executive_club, executive_position)
     cursor = db.get_db().cursor()
     r = cursor.execute(query, data)
     db.get_db().commit()
     return 'request made!'
 
-#------------------------------------------------------------
-# Get all Member Contact Information from the system
 @club_president.route('/obtain_anonamous_feedback', methods=['GET'])
 def obtain_anonamous_feedback():
 
@@ -122,8 +109,6 @@ def obtain_anonamous_feedback():
     the_response.mimetype = 'application/json'
     return the_response
 
-#------------------------------------------------------------
-# Get attendance by event type from the events
 @club_president.route('/attendance_by_event_type', methods=['GET'])
 def attendance_by_event_type():
 
@@ -144,12 +129,3 @@ def attendance_by_event_type():
     the_response.status_code = 200  
     the_response.mimetype = 'application/json'
     return the_response
-
-
-
-
-
-
-
-
-

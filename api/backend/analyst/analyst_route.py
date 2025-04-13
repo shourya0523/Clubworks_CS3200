@@ -169,6 +169,7 @@ def get_funding_request():
     cursor = db.get_db().cursor()
     the_query = '''
 SELECT r.RequestID, rt.RequestType, r.Status, r.CreatedTime, c.ClubName,
+       r.RequestDescription,
       COUNT(DISTINCT a.NUID) AS EventAttendance,
       AVG(f.Rating) AS AvgClubRating
 FROM Requests r
