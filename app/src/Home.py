@@ -73,5 +73,12 @@ if st.button('Act as System Administrator',
     st.session_state['first_name'] = 'SysAdmin'
     st.switch_page('pages/20_Admin_Home.py')
 
+if st.button('Act as a Student', 
+            type = 'primary', 
+            use_container_width=True):
+    st.session_state['authenticated'] = True
+    st.session_state['role'] = 'Student'
+    st.session_state['nuid'] = '123456789'
+    st.switch_page('pages/14_Student_Profile.py')
 
 

@@ -13,7 +13,6 @@ def HomeNav():
 def AboutPageNav():
     st.sidebar.page_link("pages/30_About.py", label="About", icon="🧠")
 
-
 #### ------------------------ Examples for Role of pol_strat_advisor ------------------------
 def PolStratAdvHomeNav():
     st.sidebar.page_link(
@@ -102,3 +101,4 @@ def SideBarLinks(show_home=False):
             del st.session_state["role"]
             del st.session_state["authenticated"]
             st.switch_page("Home.py")
+
