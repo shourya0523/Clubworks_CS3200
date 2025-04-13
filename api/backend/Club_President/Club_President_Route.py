@@ -21,19 +21,23 @@ def get_attendancecount():
 
     cursor = db.get_db().cursor()
     the_query = '''
-    SELECT e.Name AS EventName, COUNT(a.NUID) AS AttendanceCount
+    SELECT 
+    c.ClubName AS ClubName,
+    e.Name AS EventName,
+    COUNT(a.NUID) AS AttendanceCount
     FROM Events e
+    JOIN Clubs c ON e.ClubId = c.ClubId
     LEFT JOIN Attendance a ON e.EventID = a.EventID
-    WHERE e.ClubId = 2 -- Replace with Tyla's ClubID (2 for Business Society)
-    GROUP BY e.Name
+    GROUP BY c.ClubName, e.Name
     ORDER BY AttendanceCount DESC;
+
     '''
     cursor.execute(the_query)
     theData = cursor.fetchall()
     the_response = make_response(theData)
     the_response.status_code = 200  
     the_response.mimetype = 'application/json'
-    return the_response(theData)
+    return the_response
 
 #------------------------------------------------------------
 # Insert events info for events with particular EventID
@@ -60,21 +64,21 @@ def create_club_event():
 #------------------------------------------------------------
 # Get all Member Contact Information from the system
 @club_president.route('/member_contact_information', methods=['GET'])
-def member_contact_information_retrieval():
+def get_member_contact():
 
     cursor = db.get_db().cursor()
     the_query = '''
-    SELECT s.FirstName, s.LastName, s.Email
+    SELECT s.FirstName, s.LastName, s.Email, c.ClubName
     FROM Membership m
     JOIN Students s ON m.NUID = s.NUID
-    WHERE m.ClubID = 2;
+    JOIN Clubs c ON m.ClubId = c.ClubId
     '''
     cursor.execute(the_query)
     theData = cursor.fetchall()
     the_response = make_response(theData)
     the_response.status_code = 200  
     the_response.mimetype = 'application/json'
-    return the_response(theData)
+    return the_response
 
 #------------------------------------------------------------
 # Insert requests for club presidents with particular request_id
@@ -108,8 +112,7 @@ def obtain_anonamous_feedback():
     SELECT c.ClubName, f.Description, f.Rating
     FROM Feedback f
     JOIN Clubs c ON f.ClubID = c.ClubId
-    WHERE c.ClubId = 2
-    ORDER BY f.Rating DESC;
+    ORDER BY c.ClubName, f.Rating DESC;
 
     '''
     cursor.execute(the_query)
@@ -117,7 +120,7 @@ def obtain_anonamous_feedback():
     the_response = make_response(theData)
     the_response.status_code = 200  
     the_response.mimetype = 'application/json'
-    return the_response(theData)
+    return the_response
 
 #------------------------------------------------------------
 # Get attendance by event type from the events
@@ -126,13 +129,12 @@ def attendance_by_event_type():
 
     cursor = db.get_db().cursor()
     the_query = '''
-    SELECT et.EventType, COUNT(a.NUID) AS TotalAttendance
+    SELECT et.EventType, COUNT(a.NUID) AS TotalAttendance, c.ClubName
     FROM Events e
     JOIN EventTypes et ON e.Type = et.EventTypeId
     JOIN Clubs c ON e.ClubId = c.ClubId
     LEFT JOIN Attendance a ON e.EventID = a.EventID
-    WHERE c.ClubId = 2 -- Replace with Tyla's ClubID (2 for Business Society)
-    GROUP BY et.EventType
+    GROUP BY c.ClubName, et.EventType
     ORDER BY TotalAttendance DESC;
 
     '''
@@ -141,7 +143,7 @@ def attendance_by_event_type():
     the_response = make_response(theData)
     the_response.status_code = 200  
     the_response.mimetype = 'application/json'
-    return the_response(theData)
+    return the_response
 
 
 
