@@ -33,7 +33,7 @@ def get_attendancecount():
     the_response = make_response(theData)
     the_response.status_code = 200  
     the_response.mimetype = 'application/json'
-    return the_response
+    return the_response(theData)
 
 #------------------------------------------------------------
 # Insert events info for events with particular EventID
@@ -56,6 +56,8 @@ def create_club_event():
     r = cursor.execute(query, data)
     db.get_db().commit()
     return 'event created!'
+
+
 
 
 
