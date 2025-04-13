@@ -6,10 +6,25 @@ BASE_URL = 'http://api:4000'
 
 st.set_page_config(page_title="Club Management Dashboard", layout="wide")
 
-st.title("📊 Club Management Dashboard")
+st.title("Club Management Dashboard")
+
+
+# To create the buttons for Create Event and Make Request
+st.markdown("---")
+st.subheader("Club Actions")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    if st.button("➕ Create Event"):
+        st.switch_page("create_event.py")  
+
+with col2:
+    if st.button("➕ Make Request"):
+        st.switch_page("make_request.py")
 
 # Create Tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📅 Attendance", "📇 Members", "🗣️ Feedback", "📝 Make Request", "✏️ Create Events"])
+tab1, tab2, tab3 = st.tabs(["📅 Attendance", "📇 Members", "🗣️ Feedback"])
 
 # ---------------------------
 # TAB 1: Attendance Section
@@ -54,3 +69,5 @@ with tab3:
         st.dataframe(df_feedback)
     except:
         st.warning("Could not load feedback.")
+
+

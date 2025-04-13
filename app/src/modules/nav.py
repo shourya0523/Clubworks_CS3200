@@ -48,9 +48,9 @@ def ClassificationNav():
     )
 
 
-#### ------------------------ System Admin Role ------------------------
-def AdminPageNav():
-    st.sidebar.page_link("pages/20_Admin_Home.py", label="System Admin", icon="🖥️")
+#### ------------------------ Club President Role ------------------------
+def clubmanagement02():
+    st.sidebar.page_link("pages/02_club_management.py", label="Club Management", icon="🖥️")
     st.sidebar.page_link(
         "pages/21_ML_Model_Mgmt.py", label="ML Model Management", icon="🏢"
     )
