@@ -13,15 +13,12 @@ st.title("Club Management Dashboard")
 st.markdown("---")
 st.subheader("Club Actions")
 
-col1, col2 = st.columns(2)
+if st.button("➕ Create Event"):
+    st.switch_page("pages/02.1_create_event.py")  
 
-with col1:
-    if st.button("➕ Create Event"):
-        st.switch_page("create_event.py")  
 
-with col2:
-    if st.button("➕ Make Request"):
-        st.switch_page("make_request.py")
+if st.button("➕ Make Request"):
+    st.switch_page("make_request.py")
 
 # Create Tabs
 tab1, tab2, tab3 = st.tabs(["📅 Attendance", "📇 Members", "🗣️ Feedback"])

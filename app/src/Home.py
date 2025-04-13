@@ -71,6 +71,7 @@ if st.button('Act as Club President',
     st.session_state['authenticated'] = True
     st.session_state['role'] = 'club_president'
     st.session_state['first_name'] = 'Tyla'
+    st.session_state['ClubID'] = '1'
     st.switch_page('pages/02_club_management.py')
 
 

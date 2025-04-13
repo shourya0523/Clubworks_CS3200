@@ -51,13 +51,11 @@ def ClassificationNav():
 #### ------------------------ Club President Role ------------------------
 def clubmanagement02():
     st.sidebar.page_link("pages/02_club_management.py", label="Club Management", icon="🖥️")
-    st.sidebar.page_link(
-        "pages/21_ML_Model_Mgmt.py", label="ML Model Management", icon="🏢"
-    )
+    st.sidebar.page_link("pages/02.1_create_event.py", label="Create Event", icon="🏢")
 
 
 # --------------------------------Links Function -----------------------------------------------
-def SideBarLinks(show_home=False):
+def SideBarLinks(show_home=True):
     """
     This function handles adding links to the sidebar of the app based upon the logged-in user's role, which was put in the streamlit session_state object when logging in.
     """
