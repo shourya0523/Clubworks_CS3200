@@ -1,3 +1,4 @@
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -9,7 +10,7 @@ st.set_page_config(layout = 'wide')
 # Show appropriate sidebar links for the role of the currently logged in user
 SideBarLinks()
 
-st.title(f"Welcome USAID Worker, {st.session_state['first_name']}.")
+st.title(f"Welcome to Club Search")
 st.write('')
 st.write('')
 st.write('### What would you like to do today?')
@@ -17,7 +18,7 @@ st.write('### What would you like to do today?')
 if st.button('Predict Value Based on Regression Model', 
              type='primary',
              use_container_width=True):
-  st.switch_page('pages/11_Prediction.py')
+  st.switch_page('pages/11_PredictionV2.py')
 
 if st.button('View the Simple API Demo', 
              type='primary',

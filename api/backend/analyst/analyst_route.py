@@ -10,6 +10,20 @@ from backend.ml_models.model01 import predict
 
 analyst = Blueprint ('analyst', __name__)
 
+@analyst.route('/get_clubs', methods = ['GET'])
+def get_clubs():
+
+    cursor = db.get_db().cursor()
+    the_query = '''
+    SELECT *
+    FROM Clubs;
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response
 
 @analyst.route('/get_performance', methods = ['GET'])
 def get_club_performance():
@@ -187,4 +201,22 @@ ORDER BY r.CreatedTime DESC;
     the_response.status_code = 200  
     the_response.mimetype = 'application/json'
     return the_response
+
+@analyst.route('/club_interests', methods = ['GET'])
+def get_club_interest_filtering():
+
+    cursor = db.get_db().cursor()
+    the_query = '''
+SELECT i.InterestName, c.ClubName
+FROM Interests i
+JOIN AppealsTo a ON i.InterestID = a.InterestID
+JOIN Clubs c ON a.ClubID = c.ClubID;
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response
+
 

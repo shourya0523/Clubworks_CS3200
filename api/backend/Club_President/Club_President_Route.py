@@ -12,11 +12,11 @@ from backend.ml_models.model01 import predict
 #------------------------------------------------------------
 # Creating a new Blueprint object, which is a collection of 
 # routes.
-Club_President = Blueprint('Club_President', __name__)
+club_president = Blueprint('club_president', __name__)
 
 #------------------------------------------------------------
 # Get all Attendance from the system
-@Club_President.route('/Club_President', methods=['GET'])
+@club_president.route('/club_president', methods=['GET'])
 def get_attendancecount():
 
     cursor = db.get_db().cursor()
