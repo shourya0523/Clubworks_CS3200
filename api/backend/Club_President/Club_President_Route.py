@@ -57,6 +57,96 @@ def create_club_event():
     db.get_db().commit()
     return 'event created!'
 
+#------------------------------------------------------------
+# Get all Member Contact Information from the system
+@club_president.route('/member_contact_information', methods=['GET'])
+def member_contact_information_retrieval():
+
+    cursor = db.get_db().cursor()
+    the_query = '''
+    SELECT s.FirstName, s.LastName, s.Email
+    FROM Membership m
+    JOIN Students s ON m.NUID = s.NUID
+    WHERE m.ClubID = 2;
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response(theData)
+
+#------------------------------------------------------------
+# Insert requests for club presidents with particular request_id
+@club_president.route('/make_request', methods=['PUT'])
+def make_request():
+    current_app.logger.info('PUT /club_president route')
+    request_info = request.json
+    request_id = request_info['RequestID']
+    request_description = request_info['RequestDescription']
+    status = request_info['Status']
+    created_time = request_info['CreatedTime']
+    type = request_info['Type']
+    executive_id = request_info['ExecutiveID']
+    executive_club = request_info['ExecutiveClub']
+    executive_position = request_info['ExecutivePosition']
+
+    query = 'INSERT INTO Requests (Status, Type, ExecutiveID, ExecutiveClub, ExecutivePosition)'
+    data = (request_description, status, created_time, type, executive_id, executive_club, executive_position)
+    cursor = db.get_db().cursor()
+    r = cursor.execute(query, data)
+    db.get_db().commit()
+    return 'request made!'
+
+#------------------------------------------------------------
+# Get all Member Contact Information from the system
+@club_president.route('/obtain_anonamous_feedback', methods=['GET'])
+def obtain_anonamous_feedback():
+
+    cursor = db.get_db().cursor()
+    the_query = '''
+    SELECT c.ClubName, f.Description, f.Rating
+    FROM Feedback f
+    JOIN Clubs c ON f.ClubID = c.ClubId
+    WHERE c.ClubId = 2
+    ORDER BY f.Rating DESC;
+
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response(theData)
+
+#------------------------------------------------------------
+# Get attendance by event type from the events
+@club_president.route('/attendance_by_event_type', methods=['GET'])
+def attendance_by_event_type():
+
+    cursor = db.get_db().cursor()
+    the_query = '''
+    SELECT et.EventType, COUNT(a.NUID) AS TotalAttendance
+    FROM Events e
+    JOIN EventTypes et ON e.Type = et.EventTypeId
+    JOIN Clubs c ON e.ClubId = c.ClubId
+    LEFT JOIN Attendance a ON e.EventID = a.EventID
+    WHERE c.ClubId = 2 -- Replace with Tyla's ClubID (2 for Business Society)
+    GROUP BY et.EventType
+    ORDER BY TotalAttendance DESC;
+
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response(theData)
+
+
+
+
+
 
 
 
