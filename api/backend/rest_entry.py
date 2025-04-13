@@ -66,6 +66,7 @@ def create_app():
     app.register_blueprint(products,    url_prefix='/p')
     app.register_blueprint(employees,   url_prefix = '/e')
     app.register_blueprint(club_president,   url_prefix = '/pres')
+    
 
 
     # Don't forget to return the app object

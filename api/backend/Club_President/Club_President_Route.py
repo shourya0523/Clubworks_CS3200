@@ -16,7 +16,7 @@ club_president = Blueprint('club_president', __name__)
 
 #------------------------------------------------------------
 # Get all Attendance from the system
-@club_president.route('/club_president', methods=['GET'])
+@club_president.route('/attendance', methods=['GET'])
 def get_attendancecount():
 
     cursor = db.get_db().cursor()
@@ -34,3 +34,28 @@ def get_attendancecount():
     the_response.status_code = 200  
     the_response.mimetype = 'application/json'
     return the_response
+
+#------------------------------------------------------------
+# Insert events info for events with particular EventID
+@club_president.route('/create_event', methods=['PUT'])
+def create_club_event():
+    current_app.logger.info('PUT /club_president route')
+    event_info = request.json
+    event_id = event_info['EventID']
+    name = event_info['Name']
+    location = event_info['Location']
+    start_time = event_info['StartTime']
+    end_time = event_info['EndTime']
+    club_id = event_info['ClubID']
+    poster_img = event_info['PosterImg']
+    type = event_info['Type']
+
+    query = 'INSERT INTO Events (Name, Location, StartTime, EndTime, ClubId, Type)'
+    data = (name, location, start_time, end_time, club_id, type, event_id)
+    cursor = db.get_db().cursor()
+    r = cursor.execute(query, data)
+    db.get_db().commit()
+    return 'event created!'
+
+
+
