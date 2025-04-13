@@ -379,11 +379,11 @@ INSERT INTO ApplicationStatus (StatusText) VALUES
 
 -- Insert test data into Applications table
 INSERT INTO Applications (NAME, ProgramId, Description, Deadline, ApplyLink, Status) VALUES
-('Summer Hackathon Application', 1, 'Apply for our summer hackathon', '2023-06-15 23:59:59', 'https://example.com/apply/hackathon', 1),
-('Workshop Leader Application', 2, 'Apply to lead a workshop', '2023-05-20 23:59:59', 'https://example.com/apply/workshop', 3),
-('Startup Funding Application', 3, 'Apply for startup funding', '2023-07-10 23:59:59', 'https://example.com/apply/funding', 1),
-('Engineering Project Proposal', 4, 'Submit your project proposal', '2023-06-01 23:59:59', 'https://example.com/apply/project', 2),
-('Research Assistant Application', 5, 'Apply to be a research assistant', '2023-05-25 23:59:59', 'https://example.com/apply/research', 4);
+('Summer Hackathon Application', 1, 'Apply for our summer hackathon', '2025-06-15 23:59:59', 'https://example.com/apply/hackathon', 1),
+('Workshop Leader Application', 2, 'Apply to lead a workshop', '2025-05-20 23:59:59', 'https://example.com/apply/workshop', 3),
+('Startup Funding Application', 3, 'Apply for startup funding', '2025-07-10 23:59:59', 'https://example.com/apply/funding', 1),
+('Engineering Project Proposal', 4, 'Submit your project proposal', '2025-06-01 23:59:59', 'https://example.com/apply/project', 2),
+('Research Assistant Application', 5, 'Apply to be a research assistant', '2025-05-25 23:59:59', 'https://example.com/apply/research', 4);
 
 
 -- Insert test data into StudentApplication table
@@ -560,4 +560,5 @@ INSERT INTO SupportAdmins (AdminID, RequestID) VALUES
 (3, 3),
 (4, 4),
 (5, 5);
+
 
