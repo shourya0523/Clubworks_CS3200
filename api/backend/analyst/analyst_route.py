@@ -178,7 +178,6 @@ JOIN Clubs c ON e.ClubID = c.ClubId
 LEFT JOIN Events ev ON ev.ClubId = c.ClubId
 LEFT JOIN Attendance a ON a.EventID = ev.EventID
 LEFT JOIN Feedback f ON f.ClubID = c.ClubId
-WHERE rt.RequestType = 'Budget Approval'
 GROUP BY r.RequestID, rt.RequestType, r.Status, r.CreatedTime, c.ClubName
 ORDER BY r.CreatedTime DESC;
     '''
