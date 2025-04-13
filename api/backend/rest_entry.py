@@ -8,8 +8,10 @@ from backend.customers.customer_routes import customers
 from backend.products.products_routes import products
 from backend.simple.simple_routes import simple_routes
 from backend.employee.employee_routes import employees
+from backend.analyst.analyst_route import analyst
 from backend.students.student_routes import students
 import os # HANDLES pads 
+from backend.club_president.club_president_route import club_president
 from dotenv import load_dotenv # loads wtv is in env
 
 def create_app():
@@ -64,6 +66,7 @@ def create_app():
     app.register_blueprint(customers,   url_prefix='/c') # collection of related routes  
     app.register_blueprint(products,    url_prefix='/p')
     app.register_blueprint(employees,   url_prefix = '/e')
+    app.register_blueprint(club_president,   url_prefix = '/pres')
     app.register_blueprint(students,   url_prefix = '/s')
 
 
