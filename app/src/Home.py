@@ -80,5 +80,10 @@ if st.button('Act as a Student',
     st.session_state['role'] = 'Student'
     st.session_state['nuid'] = '123456789'
     st.switch_page('pages/14_Student_Profile.py')
-
-
+if st.button('Act as systems coordinator trial', 
+            type = 'primary', 
+            use_container_width=True):
+    st.session_state['authenticated'] = True
+    st.session_state['role'] = 'coordinator'
+    st.session_state['first_name'] = 'Connor'
+    st.switch_page('pages/streamlit_trial.py')
