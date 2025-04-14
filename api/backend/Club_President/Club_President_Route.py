@@ -38,21 +38,33 @@ def get_attendancecount():
 def create_club_event():
     current_app.logger.info('PUT /club_president route')
     event_info = request.json
-    event_id = event_info['EventID']
     name = event_info['Name']
     location = event_info['Location']
     start_time = event_info['StartTime']
     end_time = event_info['EndTime']
     club_id = event_info['ClubID']
-    poster_img = event_info['PosterImg']
-    type = event_info['Type']
+    event_type_name = event_info['Type']  
+    poster_img_link = event_info['PosterImg'] 
 
-    query = 'INSERT INTO Events (Name, Location, StartTime, EndTime, ClubId, PosterImg, Type) VALUES (%s, %s, %s, %s, %s, %s, %s)'
-    data = (name, location, start_time, end_time, club_id, poster_img, type)
     cursor = db.get_db().cursor()
-    r = cursor.execute(query, data)
+    cursor.execute("SELECT EventTypeID FROM EventTypes WHERE EventType = %s", (event_type_name,))
+    result = cursor.fetchone()
+    if result is None:
+        return make_response(f"Event type '{event_type_name}' not found.", 400)
+    event_type_id = result['EventTypeID']
+
+    insert_img_query = "INSERT INTO Images (ImageLink) VALUES (%s)"
+    cursor.execute(insert_img_query, (poster_img_link,))
+    poster_img_id = cursor.lastrowid  # gets auto-incremented ImageID
+
+    insert_event_query = '''
+        INSERT INTO Events (Name, Location, StartTime, EndTime, ClubId, PosterImg, Type)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    '''
+    event_data = (name, location, start_time, end_time, club_id, poster_img_id, event_type_id)
+    cursor.execute(insert_event_query, event_data)
     db.get_db().commit()
-    return 'event created!'
+    return make_response("Event created successfully!", 200)
 
 @club_president.route('/member_contact_information', methods=['GET'])
 def get_member_contact():
@@ -129,3 +141,12 @@ def attendance_by_event_type():
     the_response.status_code = 200  
     the_response.mimetype = 'application/json'
     return the_response
+
+@club_president.route('/event_types', methods=['GET'])
+def get_event_types():
+    cursor = db.get_db().cursor()
+    query = "SELECT EventTypeID, EventType FROM EventTypes"
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    types = [{"EventTypeID": row["EventTypeID"], "EventType": row["EventType"]} for row in rows]
+    return make_response(types, 200)

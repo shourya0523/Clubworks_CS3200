@@ -1,4 +1,3 @@
-
 import logging
 logger = logging.getLogger(__name__)
 
@@ -10,22 +9,17 @@ st.set_page_config(layout = 'wide')
 # Show appropriate sidebar links for the role of the currently logged in user
 SideBarLinks()
 
-st.title(f"Welcome to Club Search")
+st.title(f"Welcome Analyst!")
 st.write('')
 st.write('')
 st.write('### What would you like to do today?')
 
-if st.button('Predict Value Based on Regression Model', 
+if st.button('ClubSearch', 
              type='primary',
              use_container_width=True):
-  st.switch_page('pages/11_PredictionV2.py')
+  st.switch_page('pages/07analyst.py')
 
-if st.button('View the Simple API Demo', 
+if st.button('Engagement Tracker', 
              type='primary',
              use_container_width=True):
-  st.switch_page('pages/12_API_Test.py')
-
-if st.button("View Classification Demo",
-             type='primary',
-             use_container_width=True):
-  st.switch_page('pages/13_Classification.py')
+  st.switch_page('pages/07analystengagement.py')
