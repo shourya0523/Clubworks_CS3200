@@ -59,3 +59,6 @@ with tab_create:
             except Exception as e:
                 st.error(f"❌ Failed to reach server: {e}")
 
+# -------------------------
+# TAB 2: Edit Event
+# -------------------------

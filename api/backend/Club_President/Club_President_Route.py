@@ -38,7 +38,6 @@ def get_attendancecount():
 def create_club_event():
     current_app.logger.info('PUT /club_president route')
     event_info = request.json
-
     name = event_info['Name']
     location = event_info['Location']
     start_time = event_info['StartTime']
@@ -48,7 +47,6 @@ def create_club_event():
     poster_img_link = event_info['PosterImg'] 
 
     cursor = db.get_db().cursor()
-
     cursor.execute("SELECT EventTypeID FROM EventTypes WHERE EventType = %s", (event_type_name,))
     result = cursor.fetchone()
     if result is None:
@@ -65,7 +63,6 @@ def create_club_event():
     '''
     event_data = (name, location, start_time, end_time, club_id, poster_img_id, event_type_id)
     cursor.execute(insert_event_query, event_data)
-
     db.get_db().commit()
     return make_response("Event created successfully!", 200)
 
