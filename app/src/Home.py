@@ -86,4 +86,4 @@ if st.button('Act as systems coordinator trial',
     st.session_state['authenticated'] = True
     st.session_state['role'] = 'coordinator'
     st.session_state['first_name'] = 'Connor'
-    st.switch_page('pages/streamlit_trial.py')
+    st.switch_page('pages/05_Admin_Dashboard.py')
