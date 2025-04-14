@@ -26,6 +26,22 @@ def get_clubs():
     the_response.mimetype = 'application/json'
     return the_response
 
+@analyst.route('/get_top_clubs', methods = ['GET'])
+def get_top_clubs():
+
+    cursor = db.get_db().cursor()
+    the_query = '''
+    SELECT *
+    FROM Clubs c;
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response
+
+
 @analyst.route('/get_clubs_information', methods = ['GET'])
 def get_clubs_information():
 
@@ -257,5 +273,31 @@ ORDER BY TotalAttendance DESC;
     the_response.status_code = 200  
     the_response.mimetype = 'application/json'
     return the_response
+
+@analyst.route('/top_club', methods=['GET'])
+def top_club():
+    cursor = db.get_db().cursor()
+    the_query = '''
+    SELECT * FROM (
+        SELECT 
+            c.ClubName,
+            COUNT(DISTINCT a.NUID) AS TotalAttendance,
+            COUNT(DISTINCT f.FeedbackID) AS FeedbackCount
+        FROM Clubs c
+        LEFT JOIN Events ev ON c.ClubId = ev.ClubId
+        LEFT JOIN Attendance a ON ev.EventID = a.EventID
+        LEFT JOIN Feedback f ON c.ClubId = f.ClubID
+        GROUP BY c.ClubName
+        ORDER BY TotalAttendance DESC
+    ) AS RankedClubs
+    LIMIT 3;
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response
+
 
 
