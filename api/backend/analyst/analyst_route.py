@@ -26,21 +26,6 @@ def get_clubs():
     the_response.mimetype = 'application/json'
     return the_response
 
-@analyst.route('/get_top_clubs', methods = ['GET'])
-def get_top_clubs():
-
-    cursor = db.get_db().cursor()
-    the_query = '''
-    SELECT *
-    FROM Clubs c;
-    '''
-    cursor.execute(the_query)
-    theData = cursor.fetchall()
-    the_response = make_response(theData)
-    the_response.status_code = 200  
-    the_response.mimetype = 'application/json'
-    return the_response
-
 
 @analyst.route('/get_clubs_information', methods = ['GET'])
 def get_clubs_information():
