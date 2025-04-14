@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+from datetime import datetime
 
 BASE_URL = 'http://api:4000'
 
@@ -32,8 +33,11 @@ with tab_create:
     with st.form("create_event_form"):
         name = st.text_input("Event Name")
         location = st.text_input("Location")
-        start_time = st.time_input("Start Time")
-        end_time = st.time_input("End Time")
+        event_date = st.date_input("Event Date")
+        start_time_input = st.time_input("Start Time")
+        end_time_input = st.time_input("End Time")
+        start_time = datetime.combine(event_date, start_time_input).isoformat()
+        end_time = datetime.combine(event_date, end_time_input).isoformat()
         poster_img = st.text_input("Poster Image URL")
         event_type_list = fetch_event_types()
         event_type_labels = [t["EventType"] for t in event_type_list]
