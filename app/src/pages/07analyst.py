@@ -8,6 +8,7 @@ import seaborn as sns
 import pandas as pd
 
 
+
 st.set_page_config(
     page_title="Club Search",
     page_icon="🔍",
@@ -209,4 +210,3 @@ if selected_club:
             ax.set_ylabel("Club Name")
             ax.set_title(f"Engagement Score: {selected_club} vs All Clubs 🔥")
             st.pyplot(fig)
-

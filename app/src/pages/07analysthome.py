@@ -18,3 +18,8 @@ if st.button('ClubSearch',
              type='primary',
              use_container_width=True):
   st.switch_page('pages/07analyst.py')
+
+if st.button('Engagement Tracker', 
+             type='primary',
+             use_container_width=True):
+  st.switch_page('pages/07analystengagement.py')
