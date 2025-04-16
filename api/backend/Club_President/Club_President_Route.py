@@ -173,3 +173,4 @@ def exec_profile(nuid):
     response = make_response(jsonify(rows))
     response.status_code = 200
     return response
+
