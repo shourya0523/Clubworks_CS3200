@@ -3,12 +3,14 @@ import requests
 import pandas as pd
 
 BASE_URL = 'http://api:4000'  
-"""
+
+st.set_page_config(page_title="Club Management Dashboard", layout="wide")
+
+
 if 'nuid' in st.session_state:
     nuid = st.session_state['nuid']
-    '''
     # Make the GET request
-    response = requests.get(f'{BASE_URL}/pres/profile{nuid}')
+    response = requests.get(f'{BASE_URL}/pres/profile/{nuid}')
     response.raise_for_status()
     
     # Parse the JSON response
@@ -23,21 +25,8 @@ if 'nuid' in st.session_state:
         # Display the extracted variables
         st.write("**Extracted Variables:**")
         st.write("Club ID:", CLUB_ID)
-        st.write("Club Name:", CLUB_NAME)
-        st.write("First Name:", FIRST_NAME)
-        st.write("Positions:", POSITIONS)
-    else:
-        st.info("No data was returned by the API.")'''
 else:
-    st.switch_page('Home.py')"""
-
-if 'nuid' in st.session_state:
-    print("DEBUG: nuid found in session_state:", st.session_state['nuid'])
-else:
-    print("DEBUG: nuid not found; switching page")
     st.switch_page('Home.py')
-
-st.set_page_config(page_title="Club Management Dashboard", layout="wide")
 
 st.title("Club Management Dashboard")
 
@@ -46,7 +35,6 @@ st.title("Club Management Dashboard")
 st.markdown("---")
 st.subheader("Club Actions")
 
-st.markdown(CLUB_ID, CLUB_NAME)
 
 if st.button("➕ Create Event"):
     st.switch_page("pages/02.1_create_event.py")  
