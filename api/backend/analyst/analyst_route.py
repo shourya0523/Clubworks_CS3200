@@ -177,19 +177,20 @@ def performance_metrics():
 
     cursor = db.get_db().cursor()
     the_query = '''
-SELECT c.ClubName,
-      COUNT(DISTINCT a.NUID) AS TotalAttendance,
-      AVG(f.Rating) AS AvgRating,
-      COUNT(DISTINCT r.RequestID) AS FundingRequests,
-      GROUP_CONCAT (f.Description SEPARATOR '* ') AS FeedbackDescription
-FROM Clubs c
-LEFT JOIN Events e ON c.ClubId = e.ClubId
-LEFT JOIN Attendance a ON e.EventID = a.EventID
-LEFT JOIN Feedback f ON c.ClubId = f.ClubID
-LEFT JOIN Executives ex ON ex.ClubID = c.ClubId
-LEFT JOIN Requests r ON r.ExecutiveID = ex.NUID AND r.ExecutiveClub = ex.ClubID AND r.Type = 2
-GROUP BY c.ClubName, f.Description
-ORDER BY TotalAttendance DESC;
+    SELECT 
+        c.ClubName,
+        COUNT(DISTINCT a.NUID) AS TotalAttendance,
+        AVG(f.Rating) AS AvgRating,
+        COUNT(DISTINCT r.RequestID) AS FundingRequests,
+        GROUP_CONCAT(DISTINCT f.Description SEPARATOR ', ') AS FeedbackDescription
+    FROM Clubs c
+    JOIN Feedback f ON c.ClubId = f.ClubID
+    LEFT JOIN Events e ON c.ClubId = e.ClubId
+    LEFT JOIN Attendance a ON e.EventID = a.EventID
+    LEFT JOIN Executives ex ON ex.ClubID = c.ClubId
+    LEFT JOIN Requests r ON r.ExecutiveID = ex.NUID AND r.ExecutiveClub = ex.ClubID AND r.Type = 2
+    GROUP BY c.ClubName
+    ORDER BY TotalAttendance DESC;
     '''
     cursor.execute(the_query)
     theData = cursor.fetchall()

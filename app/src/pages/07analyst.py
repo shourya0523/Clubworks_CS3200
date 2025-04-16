@@ -129,17 +129,21 @@ with metrics_tab:
 
     if metrics:
         # Display total attendance, average rating, and funding requests
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3 = st.columns(3)
         col1.metric("Total Attendance", metrics.get("TotalAttendance", 0))
         col2.metric("Average Rating", f"{float(metrics.get('AvgRating', 0)):.1f}/5.0")
         col3.metric("Funding Requests", metrics.get("FundingRequests", 0))
 
-        # Display feedback description
-        feedback_description = metrics.get('FeedbackDescription', 'No feedback available')
-        col4.markdown(
-            f"<h4 style='font-size: 14px;'>Feedback: {feedback_description}</h4>", 
-            unsafe_allow_html=True
-        )
+        # Display feedback description (if exists)
+        feedback_str = metrics.get("FeedbackDescription", "")
+        feedback_list = [fb.strip() for fb in feedback_str.split(",") if fb.strip()]
+
+        if feedback_list:
+            st.write("### Member Feedback")
+            for fb in feedback_list:
+                st.write(f"💬 {fb}")
+        else:
+            st.info("ℹ️ No feedback available for this club.")
 
         # Fetch event performance data
         events_data = requests.get("http://api:4000/a/get_performance").json()
