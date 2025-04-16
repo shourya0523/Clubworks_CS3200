@@ -11,11 +11,11 @@ from backend.ml_models.model01 import predict
 
 club_president = Blueprint('club_president', __name__)
 
-@club_president.route('/attendance', methods=['GET'])
-def get_attendancecount():
+@club_president.route('/attendance/<clubid>', methods=['GET'])
+def get_attendancecount(clubid):
 
     cursor = db.get_db().cursor()
-    the_query = '''
+    the_query = f'''
     SELECT 
     c.ClubName AS ClubName,
     e.Name AS EventName,
@@ -23,6 +23,7 @@ def get_attendancecount():
     FROM Events e
     JOIN Clubs c ON e.ClubId = c.ClubId
     LEFT JOIN Attendance a ON e.EventID = a.EventID
+    WHERE c.ClubId = {clubid}
     GROUP BY c.ClubName, e.Name
     ORDER BY AttendanceCount DESC;
 
@@ -66,15 +67,16 @@ def create_club_event():
     db.get_db().commit()
     return make_response("Event created successfully!", 200)
 
-@club_president.route('/member_contact_information', methods=['GET'])
-def get_member_contact():
+@club_president.route('/member_contact_information/<clubid>', methods=['GET'])
+def get_member_contact(clubid):
 
     cursor = db.get_db().cursor()
-    the_query = '''
+    the_query = f'''
     SELECT s.FirstName, s.LastName, s.Email, c.ClubName
     FROM Membership m
     JOIN Students s ON m.NUID = s.NUID
     JOIN Clubs c ON m.ClubId = c.ClubId
+    WHERE c.ClubId = {clubid}
     '''
     cursor.execute(the_query)
     theData = cursor.fetchall()
@@ -121,16 +123,17 @@ def obtain_anonamous_feedback():
     the_response.mimetype = 'application/json'
     return the_response
 
-@club_president.route('/attendance_by_event_type', methods=['GET'])
-def attendance_by_event_type():
+@club_president.route('/attendance_by_event_type/<clubid>', methods=['GET'])
+def attendance_by_event_type(clubid):
 
     cursor = db.get_db().cursor()
-    the_query = '''
+    the_query = f'''
     SELECT et.EventType, COUNT(a.NUID) AS TotalAttendance, c.ClubName
     FROM Events e
     JOIN EventTypes et ON e.Type = et.EventTypeId
     JOIN Clubs c ON e.ClubId = c.ClubId
     LEFT JOIN Attendance a ON e.EventID = a.EventID
+    WHERE c.Clubid = {clubid}
     GROUP BY c.ClubName, et.EventType
     ORDER BY TotalAttendance DESC;
 

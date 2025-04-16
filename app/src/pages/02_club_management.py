@@ -52,14 +52,16 @@ tab1, tab2, tab3 = st.tabs(["📅 Attendance", "📇 Members", "🗣️ Feedback
 with tab1:
     st.subheader("Event Attendance")
 
-    res = requests.get(f'{BASE_URL}/pres/attendance')
-    df_attendance = pd.DataFrame(res.json())
-    st.dataframe(df_attendance)
-
-
-    st.subheader("Attendance by Event Type")
+    res = requests.get(f'{BASE_URL}/pres/attendance/{CLUB_ID}')
     try:
-        res = requests.get(f'{BASE_URL}/pres/attendance_by_event_type')
+        df_attendance = pd.DataFrame(res.json())
+        st.dataframe(df_attendance)
+    except:
+        st.write('No feedback yet!')
+    st.subheader("Attendance by Event Type")
+    
+    try:
+        res = requests.get(f'{BASE_URL}/pres/attendance_by_event_type/{CLUB_ID}')
         df_type = pd.DataFrame(res.json())
         st.dataframe(df_type)
     except:
@@ -71,8 +73,13 @@ with tab1:
 # ---------------------------
 with tab2:
     st.subheader("Club Member Contact Info")
+
+    res = requests.get(f'{BASE_URL}/pres/member_contact_information/{CLUB_ID}')
+    df_members = pd.DataFrame(res.json())
+    st.dataframe(df_members)
+
     try:
-        res = requests.get(f'{BASE_URL}/pres/member_contact_information')
+        res = requests.get(f'{BASE_URL}/pres/member_contact_information/{CLUB_ID}')
         df_contacts = pd.DataFrame(res.json())
         st.dataframe(df_contacts)
     except:
