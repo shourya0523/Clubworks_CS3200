@@ -39,21 +39,31 @@ if selected_club:
 
     clubs_data = requests.get("http://api:4000/a/get_clubs").json()
 
+    club_info = next((club for club in clubs_data if club["ClubName"] == selected_club))
+    
+    # Get basic club data
+    clubs_data = requests.get("http://api:4000/a/get_clubs").json()
     club_info = next((club for club in clubs_data if club["ClubName"] == selected_club), None)
-
+    
     if club_info:
         club_id = club_info.get("ClubID")
-
-        extra_info = requests.get("http://api:4000/a/get_clubs_information").json()
-        if isinstance(extra_info, list) and len(extra_info) > 0:
-            club_info.update(extra_info[0])
-
+        
+        # Get extra club information
+        extra_info_list = requests.get("http://api:4000/a/get_clubs_information").json()
+        
+        # Find the matching club in extra_info by ClubName
+        matching_extra_info = next((info for info in extra_info_list if info.get("ClubName") == selected_club), None)
+        
+        # Update club_info with matching extra info if found
+        if matching_extra_info:
+            club_info.update(matching_extra_info)
+        
         col1, col2 = st.columns([2, 1])
         with col1:
             description = club_info.get('Description', '')
             if description and "N/A" not in description:
                 st.markdown(f"**Description:** {description}")
-
+        
         with col2:
             if club_info.get("Website"):
                 st.markdown(f"🌐 [Visit Website]({club_info['Website']})")
@@ -67,18 +77,21 @@ if selected_club:
 
         # Active Members
         st.subheader("Active Members 👥")
-        members = requests.get(f"http://api:4000/a/active_member?club_id={club_id}").json()
+        all_members = requests.get("http://api:4000/a/active_member").json()
 
-        if members:
-            st.write("### Members List")
+        # Filter members based on the selected club's ID
+        club_members = [m for m in all_members if m.get("ClubName") == selected_club]
+
+        if club_members:
             with st.container(height=300):
-                for m in members:
+                for m in club_members:
                     name = f"{m.get('FirstName', '')} {m.get('LastName', '')}".strip() or "Unknown"
                     status = f"Attended {m.get('EventsAttended', 0)} event(s)"
                     st.write(f"**{name}** - *{status}*")
                     st.divider()
         else:
             st.info("ℹ️ No active members found for this club.")
+
 
         # Funding Requests
         st.subheader("Funding Requests 💰")
@@ -87,7 +100,6 @@ if selected_club:
         club_requests = [req for req in all_requests if req.get("ClubName") == selected_club]
 
         if club_requests:
-            st.write("### Funding Requests List")
             with st.container(height=300):
                 for req in club_requests:
                     created_time = req.get("CreatedTime", "")
