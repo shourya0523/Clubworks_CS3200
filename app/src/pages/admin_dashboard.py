@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import requests
 from datetime import datetime
+import plotly.express as px
+from pyvis.network import Network
+import streamlit.components.v1 as components
+import os
 
 st.set_page_config(layout='wide')
 
@@ -132,3 +136,70 @@ elif page == "Issue Tracker":
             st.error(f"Failed to fetch support requests: {support_response.status_code}")
     except Exception:
         st.error("Error fetching support requests.")
+
+    st.markdown("### 📈 Monthly Student Sign-Ups")
+
+    try:
+        res = requests.get(f"{BASE_URL}/signupsbydate")
+        if res.status_code == 200:
+            signup_data = res.json()
+            df_signups = pd.DataFrame(signup_data)
+
+            if not df_signups.empty:
+                df_signups["JoinDate"] = pd.to_datetime(df_signups["JoinDate"])
+                df_signups["Month"] = df_signups["JoinDate"].dt.to_period("M").dt.to_timestamp()
+                monthly_signups = df_signups.groupby("Month")["StudentCount"].sum().reset_index()
+
+                fig = px.line(
+                    monthly_signups,
+                    x="Month",
+                    y="StudentCount",
+                    markers=True,
+                    labels={"Month": "Month", "StudentCount": "Sign-Ups"},
+                    title="📈 Monthly Student Sign-Ups"
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No sign-up data available to display.")
+        else:
+            st.error(f"Failed to fetch sign-up history: {res.status_code}")
+    except Exception as e:
+        st.error(f"Error fetching or rendering chart: {e}")
+
+
+st.markdown("### 🌐 Student–Club Engagement Network")
+
+try:
+    response = requests.get(f"{BASE_URL}/engagementnetwork")
+    if response.status_code == 200:
+        data = response.json()
+        nodes = data["nodes"]
+        edges = data["edges"]
+
+        net = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
+        net.force_atlas_2based()
+
+        # Add nodes
+        for node in nodes:
+            color = "#87CEEB" if "(" in node else "#FF7F50"  # Students = blue, Clubs = orange
+            net.add_node(node, label=node, color=color)
+
+        # Add edges with role-based color
+        for edge in edges:
+            edge_color = "#DC143C" if edge["type"] == "executive" else "#D3D3D3"  # Red for execs, gray for members
+            edge_label = "Executive" if edge["type"] == "executive" else "Member"
+            net.add_edge(edge["source"], edge["target"], color=edge_color, title=edge_label)
+
+        # Save to /tmp for Docker safety
+        html_path = "/tmp/engagement_network.html"
+        net.save_graph(html_path)
+
+        with open(html_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+
+        components.html(html_content, height=650)
+    else:
+        st.error(f"Failed to fetch engagement data: {response.status_code}")
+except Exception as e:
+    st.error(f"Error rendering engagement graph: {e}")

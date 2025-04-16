@@ -323,12 +323,12 @@ INSERT INTO Images (ImageLink) VALUES
 
 
 -- Insert test data into Students table
-INSERT INTO Students (NUID, FirstName, LastName, GradDate, Email, Major, AboutMe, Password, ProfileIMG) VALUES
-('123456789', 'Lucas', 'Lane', '2024-05-15', 'lucas.lane@northeastern.edu', 'Computer Science', 'I am a CS student interested in AI.', 'hashedpassword1', 1),
-('987654321', 'Jane', 'Smith', '2023-12-20', 'jane.smith@northeastern.edu', 'Business', 'Business major with interest in entrepreneurship.', 'hashedpassword2', 2),
-('456789123', 'Tyla', 'Johnson', '2025-05-10', 'tyla.j@northeastern.edu', 'Engineering', 'Mechanical engineering student.', 'hashedpassword3', 3),
-('789123456', 'Jack', 'Williams', '2024-05-15', 'connor.w@northeastern.edu', 'Biology', 'Pre-med student.', 'hashedpassword4', NULL),
-('321654987', 'Mary', 'Brown', '2023-12-20', 'michael.b@example.com', 'Psychology', 'Interested in clinical psychology.', 'hashedpassword5', NULL);
+INSERT INTO Students (NUID, FirstName, LastName, GradDate, Email, Major, AboutMe, Password, ProfileIMG, JoinDate) VALUES
+('123456789', 'Lucas', 'Lane', '2024-05-15', 'lucas.lane@northeastern.edu', 'Computer Science', 'I am a CS student interested in AI.', 'hashedpassword1', 1, '2024-07-01'),
+('987654321', 'Jane', 'Smith', '2023-12-20', 'jane.smith@northeastern.edu', 'Business', 'Business major with interest in entrepreneurship.', 'hashedpassword2', 2, '2024-08-01'),
+('456789123', 'Tyla', 'Johnson', '2025-05-10', 'tyla.j@northeastern.edu', 'Engineering', 'Mechanical engineering student.', 'hashedpassword3', 3, '2024-09-01'),
+('789123456', 'Jack', 'Williams', '2024-05-15', 'connor.w@northeastern.edu', 'Biology', 'Pre-med student.', 'hashedpassword4', NULL, '2024-09-01'),
+('321654987', 'Mary', 'Brown', '2023-12-20', 'michael.b@example.com', 'Psychology', 'Interested in clinical psychology.', 'hashedpassword5', NULL, '2024-07-01');
 
 
 -- Insert test data into Follows table
