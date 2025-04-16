@@ -116,6 +116,23 @@ elif page == "Issue Tracker":
     except Exception:
         st.error("Error fetching incomplete registrations.")
 
+    st.markdown("### 🏛️ Clubs with Incomplete Profiles")
+    try:
+        clubs_response = requests.get(f"{BASE_URL}/clubs")
+        if clubs_response.status_code == 200:
+            incomplete_clubs = clubs_response.json()
+            if isinstance(incomplete_clubs, dict):
+                incomplete_clubs = [incomplete_clubs]
+            if incomplete_clubs and "Status" not in incomplete_clubs[0]:
+                df_clubs = pd.DataFrame(incomplete_clubs)
+                st.dataframe(df_clubs)
+            else:
+                st.write("No clubs with incomplete profiles.")
+        else:
+            st.error(f"Failed to fetch incomplete clubs: {clubs_response.status_code}")
+    except Exception:
+        st.error("Error fetching incomplete clubs.")
+
     st.markdown("### 📩 Support Requests")
     try:
         support_response = requests.get(f"{BASE_URL}/supportrequests")
