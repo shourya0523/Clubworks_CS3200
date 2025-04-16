@@ -97,3 +97,11 @@ if st.button('Act as Connor, the Systems Coordinator',
     st.session_state['role'] = 'coordinator'
     st.session_state['first_name'] = 'Connor'
     st.switch_page('pages/admin_dashboard.py')
+    
+if st.button('Help',
+            type = 'primary', 
+            use_container_width=True):
+    st.session_state['authenticated'] = True
+    st.session_state['role'] = 'coordinator'
+    st.session_state['first_name'] = 'Connor'
+    st.switch_page('pages/make_request.py')
