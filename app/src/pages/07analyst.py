@@ -111,7 +111,6 @@ if selected_club:
                     rating_str = f"{float(rating):.1f}/5.0" if rating else "No ratings"
                     st.write(f"**Request #{req['RequestID']} - {req['RequestType']}**")
                     st.write(f"Status: **{req['Status']}** | Created: {date}")
-                    st.write(f"📊 Event Attendance: {req.get('EventAttendance', 0)} | ⭐ Club Rating: {rating_str}")
                     st.divider()
         else:
             st.info("ℹ️ No funding requests found for this club.")
