@@ -77,6 +77,44 @@ if page == "System Health Dashboard":
     except Exception:
         st.error("Error fetching most attended events.")
 
+        st.markdown("### 🌐 Student–Club Engagement Network")
+
+    try:
+        response = requests.get(f"{BASE_URL}/engagementnetwork")
+        if response.status_code == 200:
+            data = response.json()
+            nodes = data["nodes"]
+            edges = data["edges"]
+
+            net = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
+            net.force_atlas_2based()
+
+            # Add nodes
+            for node in nodes:
+                # Students = pink, Clubs = blue
+                color = "#FFC0CB" if "(" in node else "#AFEEEE"
+                net.add_node(node, label=node, color=color)
+
+            # Add edges with role-based color
+            for edge in edges:
+                # purple for execs, coral for members
+                edge_color = "#D8BFD8" if edge["type"] == "executive" else "#FFA07A"
+                edge_label = "Executive" if edge["type"] == "executive" else "Member"
+                net.add_edge(edge["source"], edge["target"], color=edge_color, title=edge_label)
+
+            # Save to /tmp for Docker safety
+            html_path = "/tmp/engagement_network.html"
+            net.save_graph(html_path)
+
+            with open(html_path, "r", encoding="utf-8") as f:
+                html_content = f.read()
+
+            components.html(html_content, height=650)
+        else:
+            st.error(f"Failed to fetch engagement data: {response.status_code}")
+    except Exception as e:
+        st.error(f"Error rendering engagement graph: {e}")
+
 # API HEALTH PAGE
 elif page == "API Health":
     st.switch_page('pages/12_API_Test.py')
@@ -166,40 +204,3 @@ elif page == "Issue Tracker":
             st.error(f"Failed to fetch sign-up history: {res.status_code}")
     except Exception as e:
         st.error(f"Error fetching or rendering chart: {e}")
-
-
-st.markdown("### 🌐 Student–Club Engagement Network")
-
-try:
-    response = requests.get(f"{BASE_URL}/engagementnetwork")
-    if response.status_code == 200:
-        data = response.json()
-        nodes = data["nodes"]
-        edges = data["edges"]
-
-        net = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
-        net.force_atlas_2based()
-
-        # Add nodes
-        for node in nodes:
-            color = "#87CEEB" if "(" in node else "#FF7F50"  # Students = blue, Clubs = orange
-            net.add_node(node, label=node, color=color)
-
-        # Add edges with role-based color
-        for edge in edges:
-            edge_color = "#DC143C" if edge["type"] == "executive" else "#D3D3D3"  # Red for execs, gray for members
-            edge_label = "Executive" if edge["type"] == "executive" else "Member"
-            net.add_edge(edge["source"], edge["target"], color=edge_color, title=edge_label)
-
-        # Save to /tmp for Docker safety
-        html_path = "/tmp/engagement_network.html"
-        net.save_graph(html_path)
-
-        with open(html_path, "r", encoding="utf-8") as f:
-            html_content = f.read()
-
-        components.html(html_content, height=650)
-    else:
-        st.error(f"Failed to fetch engagement data: {response.status_code}")
-except Exception as e:
-    st.error(f"Error rendering engagement graph: {e}")
