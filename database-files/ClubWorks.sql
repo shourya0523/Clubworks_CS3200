@@ -398,9 +398,11 @@ INSERT INTO StudentApplication (NUID, ApplicationID) VALUES
 -- Insert test data into Feedback table
 INSERT INTO Feedback (Description, Rating, NUID, ClubID) VALUES
 ('Great club with helpful resources', 5, '123456789', 1),
+('Love this club', 4, '123456789', 1),
 ('Enjoyed the events but could use more workshops', 4, '987654321', 2),
 ('Excellent mentorship opportunities', 5, '456789123', 3),
 ('Good community but limited resources', 3, '789123456', 4),
+('Its not that great', 2, '789123456', 4),
 ('Needs more regular meetings', 3, '321654987', 5);
 
 

@@ -116,44 +116,58 @@ if selected_club:
         else:
             st.info("ℹ️ No funding requests found for this club.")
 
-        # Engagement Info
-        st.subheader("Engagement Information 📈")
-        metrics_tab, retention_tab, major_tab, comparison_tab = st.tabs(["Performance Metrics", "Retention Rate", "Engagement by Major", "Club Comparison"])
+# Engagement Info
+st.subheader("Engagement Information 📈")
+metrics_tab, retention_tab, major_tab, comparison_tab = st.tabs(["Performance Metrics", "Retention Rate", "Engagement by Major", "Club Comparison"])
 
-        with metrics_tab:
-            performance = requests.get("http://api:4000/a/performance_metrics").json()
+with metrics_tab:
+    # Fetch performance data
+    performance = requests.get("http://api:4000/a/performance_metrics").json()
 
-            metrics = next((p for p in performance if p.get("ClubName") == selected_club), None)
+    # Get metrics for the selected club
+    metrics = next((p for p in performance if p.get("ClubName") == selected_club), None)
 
-            if metrics:
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Total Attendance", metrics.get("TotalAttendance", 0))
-                col2.metric("Average Rating", f"{float(metrics.get('AvgRating', 0)):.1f}/5.0")
-                col3.metric("Funding Requests", metrics.get("FundingRequests", 0))
+    if metrics:
+        # Display total attendance, average rating, and funding requests
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Total Attendance", metrics.get("TotalAttendance", 0))
+        col2.metric("Average Rating", f"{float(metrics.get('AvgRating', 0)):.1f}/5.0")
+        col3.metric("Funding Requests", metrics.get("FundingRequests", 0))
 
-                events_data = requests.get("http://api:4000/a/get_performance").json()
+        # Display feedback description
+        feedback_description = metrics.get('FeedbackDescription', 'No feedback available')
+        col4.markdown(
+            f"<h4 style='font-size: 14px;'>Feedback: {feedback_description}</h4>", 
+            unsafe_allow_html=True
+        )
 
-                events = [e for e in events_data if e.get("ClubName") == selected_club]
+        # Fetch event performance data
+        events_data = requests.get("http://api:4000/a/get_performance").json()
 
-                if events:
-                    st.write("### Attendance by Event Type and Interest")
-                    with st.container(height=250):
-                        event_map = {}
-                        for e in events:
-                            etype = e.get("EventType", "Unknown")
-                            interest = e.get("InterestName", "General")
-                            count = e.get("TotalAttendance", 0)
-                            if etype not in event_map:
-                                event_map[etype] = []
-                            event_map[etype].append((interest, count))
+        # Filter events for the selected club
+        events = [e for e in events_data if e.get("ClubName") == selected_club]
 
-                        for etype in event_map:
-                            st.write(f"**{etype} Events**")
-                            for item in event_map[etype]:
-                                st.write(f"- {item[0]}: {item[1]} attendees")
-                            st.divider()
-                else:
-                    st.info("ℹ️ No event performance data available.")
+        if events:
+            st.write("### Attendance by Event Type and Interest")
+            with st.container(height=250):
+                event_map = {}
+                for e in events:
+                    etype = e.get("EventType", "Unknown")
+                    interest = e.get("InterestName", "General")
+                    count = e.get("TotalAttendance", 0)
+                    if etype not in event_map:
+                        event_map[etype] = []
+                    event_map[etype].append((interest, count))
+
+                for etype in event_map:
+                    st.write(f"**{etype} Events**")
+                    for item in event_map[etype]:
+                        st.write(f"- {item[0]}: {item[1]} attendees")
+                    st.divider()
+        else:
+            st.info("ℹ️ No event performance data available.")
+    else:
+        st.info("ℹ️ No performance metrics found for this club.")
 
         with retention_tab:
             retention = requests.get("http://api:4000/a/retention").json()
@@ -198,6 +212,9 @@ if selected_club:
                     st.write(f"{i + 1}. **{m}**: {c} total attendances")
             else:
                 st.info("ℹ️ No engagement by major data available.")
+
+
+
 
         with comparison_tab:
             all_metrics = requests.get("http://api:4000/a/performance_metrics").json()
