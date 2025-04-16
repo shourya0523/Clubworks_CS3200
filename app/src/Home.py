@@ -96,4 +96,4 @@ if st.button('Act as Connor, the Systems Coordinator',
     st.session_state['authenticated'] = True
     st.session_state['role'] = 'coordinator'
     st.session_state['first_name'] = 'Connor'
-    st.switch_page('pages/05_Admin_Dashboard.py')
+    st.switch_page('pages/admin_dashboard.py')
