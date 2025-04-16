@@ -150,3 +150,23 @@ def get_event_types():
     rows = cursor.fetchall()
     types = [{"EventTypeID": row["EventTypeID"], "EventType": row["EventType"]} for row in rows]
     return make_response(types, 200)
+
+@club_president.route('/profile/<nuid>', methods =['GET'])
+def exec_profile(nuid):
+    cursor = db.get_db().cursor()
+    query = f'''
+    SELECT c.ClubId, s.FirstName, c.ClubName,
+    GROUP_CONCAT(ex.Position SEPARATOR ', ') AS Positions
+    FROM Clubs c
+    JOIN Executives ex ON c.ClubId = ex.ClubID
+    JOIN Students s ON s.NUID = ex.NUID
+    WHERE  s.NUID = {nuid}
+    GROUP BY 
+        s.NUID, c.ClubId, s.FirstName, c.ClubName;
+
+    '''
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    response = make_response(jsonify(rows))
+    response.status_code = 200
+    return response
