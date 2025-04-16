@@ -32,7 +32,7 @@ def get_clubs_information():
 
     cursor = db.get_db().cursor()
     the_query = '''
-    SELECT c.Description, c.LogoImg, c.LinkTree, c.CalendarLink 
+    SELECT c.Description, c.LogoImg, c.LinkTree, c.CalendarLink , c.ClubName
     FROM Clubs c;
     '''
     cursor.execute(the_query)
@@ -94,11 +94,12 @@ def get_active_members():
 
     cursor = db.get_db().cursor()
     the_query = '''
-SELECT s.NUID, s.FirstName, s.LastName, COUNT(DISTINCT a.EventID) AS EventsAttended
+SELECT s.NUID, s.FirstName, s.LastName, COUNT(DISTINCT a.EventID) AS EventsAttended, c.ClubName
 FROM Membership m
 JOIN Students s ON m.NUID = s.NUID
 LEFT JOIN Attendance a ON s.NUID = a.NUID
-GROUP BY s.NUID, s.FirstName, s.LastName
+JOIN Clubs c 
+GROUP BY s.NUID, s.FirstName, s.LastName, c.ClubName
 ORDER BY EventsAttended;
     '''
     cursor.execute(the_query)
@@ -179,14 +180,15 @@ def performance_metrics():
 SELECT c.ClubName,
       COUNT(DISTINCT a.NUID) AS TotalAttendance,
       AVG(f.Rating) AS AvgRating,
-      COUNT(DISTINCT r.RequestID) AS FundingRequests
+      COUNT(DISTINCT r.RequestID) AS FundingRequests,
+      GROUP_CONCAT (f.Description SEPARATOR '* ') AS FeedbackDescription
 FROM Clubs c
 LEFT JOIN Events e ON c.ClubId = e.ClubId
 LEFT JOIN Attendance a ON e.EventID = a.EventID
 LEFT JOIN Feedback f ON c.ClubId = f.ClubID
 LEFT JOIN Executives ex ON ex.ClubID = c.ClubId
 LEFT JOIN Requests r ON r.ExecutiveID = ex.NUID AND r.ExecutiveClub = ex.ClubID AND r.Type = 2
-GROUP BY c.ClubName
+GROUP BY c.ClubName, f.Description
 ORDER BY TotalAttendance DESC;
     '''
     cursor.execute(the_query)
