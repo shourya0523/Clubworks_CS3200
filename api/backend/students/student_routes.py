@@ -3,6 +3,74 @@ from backend.db_connection import db
 
 students = Blueprint('students', __name__)
 
+@students.route('/student_login', methods=['GET'])
+def student_login():
+    email = request.args.get('email')
+    password = request.args.get('password')
+    
+    if not email or not password:
+        response = make_response(jsonify({
+            'status': 'error',
+            'message': 'Email and password are required'
+        }))
+        response.status_code = 400
+        return response
+    
+    query = '''
+    SELECT NUID
+    FROM Students
+    WHERE Email = %s AND Password = %s;
+    '''
+    
+    cursor = db.get_db().cursor()
+    cursor.execute(query, (email, password))
+    
+    result = cursor.fetchall()
+    
+    if result:
+        response = make_response(result[0]['NUID'])
+        response.status_code = 200
+    else:
+        response = make_response(jsonify({
+            'status': 'error',
+            'message': 'Invalid email or password. Please sign up if you dont have an account.'
+        }))
+        response.status_code = 401
+    
+    return response
+
+@students.route('/get_student_profile/<nuid>', methods=['GET'])
+def get_student(nuid):
+    query = f'''
+    SELECT 
+    s.*,
+    i.ImageID,
+    i.ImageLink,
+    GROUP_CONCAT(ins.InterestName SEPARATOR ', ') AS Interests
+    FROM 
+        Students s
+    JOIN 
+        Images i ON s.ProfileIMG = i.ImageID
+    LEFT JOIN 
+        Interested ind ON ind.NUID = s.NUID
+    LEFT JOIN 
+        Interests ins ON ins.InterestID = ind.InterestID
+    WHERE 
+        s.NUID = {nuid}
+    GROUP BY 
+        s.NUID;'''
+        
+    cursor = db.get_db().cursor()
+    cursor.execute(query)
+    
+    the_data = cursor.fetchall()
+    
+    response = make_response(jsonify(the_data))
+
+    response.status_code = 200
+    
+    return response
+
 @students.route('/open_apps', methods=['GET'])
 def get_open_apps():
     query = '''
@@ -43,9 +111,9 @@ def get_feedback():
     
     return response
 
-@students.route('/followcount', methods=['GET'])
-def get_followcount():
-    query = '''
+@students.route('/followcount/<nuid>', methods=['GET'])
+def get_followcount(nuid):
+    query = f'''
     SELECT 
         s.NUID,
         s.FirstName,
@@ -59,6 +127,7 @@ def get_followcount():
         Follows f1 ON s.NUID = f1.FolloweeID
     LEFT JOIN 
         Follows f2 ON s.NUID = f2.FollowerID
+    WHERE s.NUID = {nuid}
     GROUP BY 
         s.NUID, s.FirstName, s.LastName, s.Email
     ORDER BY 
@@ -76,31 +145,45 @@ def get_followcount():
     
     return response
 
-@students.route('/follows', methods=['GET'])
-def get_follows():
-    query = '''
-SELECT 
-    follower.NUID AS FollowerID,
-    CONCAT(follower.FirstName, ' ', follower.LastName) AS Follower,
-    followee.NUID AS FolloweeID,
-    CONCAT(followee.FirstName, ' ', followee.LastName) AS Followee
-FROM 
-    Follows f
-JOIN 
-    Students follower ON f.FollowerID = follower.NUID
-JOIN 
-    Students followee ON f.FolloweeID = followee.NUID
-ORDER BY 
-    Follower, Followee;
-    '''
-        
-    cursor = db.get_db().cursor()
-    cursor.execute(query)
-    
-    the_data = cursor.fetchall()
-    
-    response = make_response(jsonify(the_data))
+@students.route('/follows/<nuid>', methods=['GET'])
+def get_follows(nuid):
 
+    followers_query = f'''
+    SELECT 
+        CONCAT(follower.FirstName, ' ', follower.LastName) AS FollowerName
+    FROM 
+        Follows f
+    JOIN 
+        Students follower ON f.FollowerID = follower.NUID
+    WHERE 
+        f.FolloweeID = {nuid}
+    '''
+    
+    following_query = f'''
+    SELECT 
+        CONCAT(followee.FirstName, ' ', followee.LastName) AS FollowingName
+    FROM 
+        Follows f
+    JOIN 
+        Students followee ON f.FolloweeID = followee.NUID
+    WHERE 
+        f.FollowerID = {nuid}
+    '''
+    
+    cursor = db.get_db().cursor()
+    
+    cursor.execute(followers_query)
+    followers_data = cursor.fetchall()
+    
+    cursor.execute(following_query)
+    following_data = cursor.fetchall()
+    
+    result = {
+        "followers": [follower["FollowerName"] for follower in followers_data],
+        "following": [following["FollowingName"] for following in following_data]
+    }
+    
+    response = make_response(jsonify(result))
     response.status_code = 200
     
     return response

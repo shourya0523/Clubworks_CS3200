@@ -1,3 +1,4 @@
+
 from flask import Blueprint
 from flask import request
 from flask import jsonify
@@ -9,6 +10,38 @@ from backend.ml_models.model01 import predict
 
 
 analyst = Blueprint ('analyst', __name__)
+
+@analyst.route('/get_clubs', methods = ['GET'])
+def get_clubs():
+
+    cursor = db.get_db().cursor()
+    the_query = '''
+    SELECT *
+    FROM Clubs c;
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response
+
+
+@analyst.route('/get_clubs_information', methods = ['GET'])
+def get_clubs_information():
+
+    cursor = db.get_db().cursor()
+    the_query = '''
+    SELECT c.Description, c.LogoImg, c.LinkTree, c.CalendarLink 
+    FROM Clubs c;
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response
+
 
 
 @analyst.route('/get_performance', methods = ['GET'])
@@ -168,10 +201,7 @@ def get_funding_request():
 
     cursor = db.get_db().cursor()
     the_query = '''
-SELECT r.RequestID, rt.RequestType, r.Status, r.CreatedTime, c.ClubName,
-       r.RequestDescription,
-      COUNT(DISTINCT a.NUID) AS EventAttendance,
-      AVG(f.Rating) AS AvgClubRating
+SELECT r.RequestID, rt.RequestType, r.Status, r.CreatedTime, c.ClubName
 FROM Requests r
 JOIN RequestTypes rt ON r.Type = rt.RequestTypeId
 JOIN Executives e ON r.ExecutiveID = e.NUID AND r.ExecutiveClub = e.ClubID
@@ -188,4 +218,71 @@ ORDER BY r.CreatedTime DESC;
     the_response.status_code = 200  
     the_response.mimetype = 'application/json'
     return the_response
+
+@analyst.route('/club_interests', methods = ['GET'])
+def get_club_interest_filtering():
+
+    cursor = db.get_db().cursor()
+    the_query = '''
+SELECT i.InterestName, c.ClubName
+FROM Interests i
+JOIN AppealsTo a ON i.InterestID = a.InterestID
+JOIN Clubs c ON a.ClubID = c.ClubID;
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response
+
+@analyst.route('/club_engagement', methods = ['GET'])
+def get_club_engagement():
+
+    cursor = db.get_db().cursor()
+    the_query = '''
+SELECT 
+    c.ClubName,
+    COUNT(DISTINCT a.NUID) AS TotalAttendance,
+    COUNT(DISTINCT f.FeedbackID) AS FeedbackCount
+FROM Clubs c
+LEFT JOIN Events ev ON c.ClubId = ev.ClubId
+LEFT JOIN Attendance a ON ev.EventID = a.EventID
+LEFT JOIN Feedback f ON c.ClubId = f.ClubID
+GROUP BY c.ClubName
+ORDER BY TotalAttendance DESC;
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response
+
+@analyst.route('/top_club', methods=['GET'])
+def top_club():
+    cursor = db.get_db().cursor()
+    the_query = '''
+    SELECT * FROM (
+        SELECT 
+            c.ClubName,
+            COUNT(DISTINCT a.NUID) AS TotalAttendance,
+            COUNT(DISTINCT f.FeedbackID) AS FeedbackCount
+        FROM Clubs c
+        LEFT JOIN Events ev ON c.ClubId = ev.ClubId
+        LEFT JOIN Attendance a ON ev.EventID = a.EventID
+        LEFT JOIN Feedback f ON c.ClubId = f.ClubID
+        GROUP BY c.ClubName
+        ORDER BY TotalAttendance DESC
+    ) AS RankedClubs
+    LIMIT 3;
+    '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response
+
+
 
