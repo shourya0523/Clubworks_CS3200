@@ -18,7 +18,7 @@ st.write("Browse open applications for club programs and opportunities")
 st.session_state['authenticated'] = True
 st.session_state['role'] = 'club_executive'
 st.session_state['first_name'] = 'Tyla'
-st.session_state['nuid'] = '456789123'
+st.session_state['nuid'] = '123456789'
 
 
 
@@ -27,50 +27,73 @@ openapps = requests.get("http://api:4000/s/open_apps")
 if openapps.status_code == 200:
     openapps = openapps.json()
 else:
-    st.error(f"Error fetching applications: {response.status_code}")
+    st.error(f"Error fetching applications: {openapps.status_code}")
 
-
+def add_app_to_apps(app_name, club_name, apply_link, deadline, description):
+    
+    nuid = st.session_state['nuid']
+    
+    response = requests.post(
+        f"{BASE_URL}/s/apply_to_app",
+        json={
+            'nuid': nuid,
+            'application_name': app_name
+        }
+    )
+    if response.status_code == 201:
+        st.success("Successfully added!")
+    elif response.status_code == 200:
+        st.info(response.json().get('message', 'You have already applied to this program'))
+    else:
+        st.error(f"Error adding applicationsr: {response.text}")
+                        
 if openapps:
 
-    apps_df = pd.DataFrame(open_apps)
+    apps_df = pd.DataFrame(openapps)
     
     if 'Deadline' in apps_df.columns:
         apps_df['FormattedDeadline'] = pd.to_datetime(apps_df['Deadline']).dt.strftime('%B %d, %Y')
         apps_df['DaysLeft'] = (pd.to_datetime(apps_df['Deadline']) - datetime.datetime.now()).dt.days
     
-    # Create tabs for different views
     tab1, tab2 = st.tabs(["All Applications", "Applications by Club"])
     
     with tab1:
-        # Display all applications in a card layout
         st.subheader("Open Applications")
         
-        # Create a grid layout for cards
         cols = st.columns(3)
         
-        for i, app in enumerate(open_apps):
+        for i, app in enumerate(openapps):
             with cols[i % 3]:
                 with st.container(border=True):
                     st.subheader(app['NAME'])
                     st.caption(f"**Club:** {app['ClubName']}")
                     
-                    # Show deadline with days remaining
                     deadline = pd.to_datetime(app['Deadline'])
                     days_left = (deadline - datetime.datetime.now()).days
                     
                     if days_left > 10:
-                        st.caption(f"📅 Deadline: {deadline.strftime('%B %d, %Y')} ({days_left} days left)")
+                        st.caption(f"Deadline: {deadline.strftime('%B %d, %Y')} (🟢{days_left} days left)")
                     elif days_left > 3:
-                        st.caption(f"📅 Deadline: {deadline.strftime('%B %d, %Y')} (🟠 {days_left} days left)")
-                    else:
-                        st.caption(f"📅 Deadline: {deadline.strftime('%B %d, %Y')} (🔴 {days_left} days left)")
+                        st.caption(f"Deadline: {deadline.strftime('%B %d, %Y')} (🟠 {days_left} days left)")
                     
                     if app['ApplicationDescription']:
-                        st.write(description)
+                        st.write(app['ApplicationDescription'])
+                    
+                    if app['Status']:
+                        st.write(app['Status'])
                     
                     if app['ApplyLink']:
-                        st.link_button("Apply Now", app['ApplyLink'], type="primary")
-    
+                        st.link_button("Apply Now", app['ApplyLink'], type="primary",)
+                        
+                    st.button("Add to My Applications", 
+                              on_click=add_app_to_apps, 
+                              args=(app['NAME'],
+                                    app['ClubName'],
+                                    app['ApplyLink'],
+                                    app['Deadline'],
+                                    app['ApplicationDescription']),
+                              type="primary",
+                              key=f"add_app_{i}")
     with tab2:
 
         clubs = apps_df['ClubName'].unique()
@@ -112,21 +135,15 @@ with tips_col2:
 st.markdown("---")
 st.subheader("Your Applications")
 
-# This would typically fetch from an API, but for now we'll use a placeholder
-if "nuid" in st.session_state:
-    # Function to get student applications (placeholder)
-    def get_student_applications(nuid):
-        # In a real implementation, this would call an API endpoint
-        # For now, return an empty list
-        return []
-    
-    student_apps = get_student_applications(st.session_state["nuid"])
-    
-    if student_apps:
-        # Display student applications
-        st.write("Here are your current applications:")
-        # Display applications table
-    else:
-        st.info("You haven't applied to any programs yet. Browse the open applications above to get started!")
+student_apps_response = requests.get(f"{BASE_URL}/s/applications/{st.session_state['nuid']}")
+
+
+student_apps = student_apps_response.json()
+if student_apps and len(student_apps) > 0:
+    st.write("Here are your current applications:")
+    for app in student_apps:
+        with st.expander(app.get('application_name', 'Unknown Application')):
+            st.write(f"**Club:** {app.get('club_name', 'Unknown Club')}")
+            st.write(f"**Status:** {app.get('status', 'Pending')}")
 else:
-    st.warning("Please log in to track your applications.")
+    st.info("You haven't applied to any programs yet. Browse the open applications above to get started!")

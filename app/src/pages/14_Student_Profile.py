@@ -27,10 +27,10 @@ if response.status_code == 200:
     header_col1, header_col2 = st.columns([1, 3])
     
     with header_col1:
-        if 'ImageLink' in student and student['ImageLink']:
+        if 'ImageLink' in student['ImageLink']:
             st.image(student['ImageLink'], width=200)
         else:
-            st.image("https://via.placeholder.com/200x200?text=No+Image", width=200)
+            st.image("https://pics.craiyon.com/2023-09-25/dc204a03135d4e4e9a395fbe99502814.webp", width=200)
     
     with header_col2:
         st.title(f"{student['FirstName']} {student['LastName']}")
@@ -109,24 +109,37 @@ if response.status_code == 200:
                         club_name = event.get('ClubName', 'Unknown')
                         club_attendance[club_name] = club_attendance.get(club_name, 0) + 1
                     
-                    fig = go.Figure(data=[
-                        go.Bar(
-                            x=list(club_attendance.keys()),
-                            y=list(club_attendance.values()),
-                            marker_color='royalblue'
-                        )
-                    ])
-                    fig.update_layout(
-                        title="Events Attended by Club",
-                        xaxis_title="Club",
-                        yaxis_title="Number of Events",
+                    import plotly.express as px
+                    attendance_df = pd.DataFrame({
+                        'Club': list(club_attendance.keys()),
+                        'Events Attended': list(club_attendance.values())
+                    })
+                    
+                    fig = px.bar(
+                        attendance_df, 
+                        x='Club', 
+                        y='Events Attended',
+                        color='Events Attended',
+                        color_continuous_scale = 'reds',
+                        labels={'Club': 'Club Name', 'Events Attended': 'Number of Events'},
+                        title='Events Attended by Club',
                         height=400
                     )
+                    
+                    fig.update_layout(
+                        xaxis_title="Club",
+                        yaxis_title="Number of Events",
+                        coloraxis_showscale=False,
+                        hoverlabel=dict(bgcolor="white", font_size=14)
+                    )
+                    
                     st.plotly_chart(fig, use_container_width=True)
                     
                     st.subheader("Recent Events Attended")
                     for event in attendance_data[:5]:  
-                        st.write(f"• {event.get('Name')} ({event.get('ClubName')}) - {event.get('StartTime')}")
+                        event_time = event.get('StartTime', '')
+                        formatted_time = event_time
+                        st.write(f"• {event.get('Name')} ({event.get('ClubName')}) - {formatted_time}")
                 else:
                     st.info("You haven't attended any events yet.")
     
@@ -167,7 +180,6 @@ if response.status_code == 200:
     with tab4:
         st.subheader("Upcoming Events")
         
-        # TODO: Add the logic to fetch upcoming events
         upcoming_events_response = re.get(f'{BASE_URL}/s/upcoming_events/{NUID}')
         
         if upcoming_events_response.status_code == 200:
@@ -183,13 +195,7 @@ if response.status_code == 200:
                             st.write(f"**Location:** {event.get('Location', 'TBD')}")
                             st.write(f"**Time:** {event.get('StartTime')} - {event.get('EndTime')}")
                         with event_col2:
-                            event_date = datetime.strptime(event.get('StartTime', '2023-06-10 14:00:00'), '%Y-%m-%d %H:%M:%S')
-                            st.markdown(f"""
-                            <div style="background-color:#f0f2f6;padding:10px;border-radius:5px;text-align:center;">
-                                <h1 style="margin:0;font-size:24px;">{event_date.day}</h1>
-                                <p style="margin:0;">{event_date.strftime('%b')}</p>
-                            </div>
-                            """, unsafe_allow_html=True)
+                            st.markdown(event.get('StartTime'))
             else:
                 st.info("You don't have any upcoming events.")
         else:

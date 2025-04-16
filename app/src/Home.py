@@ -104,4 +104,4 @@ if st.button('Help',
     st.session_state['authenticated'] = True
     st.session_state['role'] = 'coordinator'
     st.session_state['first_name'] = 'Connor'
-    st.switch_page('pages/make_request.py')
+    st.switch_page('pages/01_Discover.py')
