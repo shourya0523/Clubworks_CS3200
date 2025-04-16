@@ -105,15 +105,15 @@ def make_request():
     db.get_db().commit()
     return 'request made!'
 
-@club_president.route('/obtain_anonamous_feedback', methods=['GET'])
-def obtain_anonamous_feedback():
+@club_president.route('/obtain_anonamous_feedback/<clubid>', methods=['GET'])
+def obtain_anonamous_feedback(clubid):
 
     cursor = db.get_db().cursor()
-    the_query = '''
+    the_query = f'''
     SELECT c.ClubName, f.Description, f.Rating
     FROM Feedback f
     JOIN Clubs c ON f.ClubID = c.ClubId
-    
+    WHERE c.ClubId = {clubid}
     ORDER BY c.ClubName, f.Rating DESC;
     '''
     cursor.execute(the_query)
