@@ -90,13 +90,9 @@ with tab2:
 # ---------------------------
 with tab3:
     st.subheader("Anonymous Feedback")
-
-    res = requests.get(f'{BASE_URL}/pres/obtain_anonamous_feedback/{CLUB_ID}')
-    df_obtain_anonamous_feedbackdf = pd.DataFrame(res.json())
-    st.dataframe(df_obtain_anonamous_feedbackdf)
     
     try:
-        res = requests.get(f'{BASE_URL}/pres/obtain_anonamous_feedback')
+        res = requests.get(f'{BASE_URL}/pres/obtain_anonamous_feedback/{CLUB_ID}')
         df_feedback = pd.DataFrame(res.json())
         st.dataframe(df_feedback)
     except:
