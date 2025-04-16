@@ -111,8 +111,8 @@ def obtain_anonamous_feedback():
     SELECT c.ClubName, f.Description, f.Rating
     FROM Feedback f
     JOIN Clubs c ON f.ClubID = c.ClubId
+    
     ORDER BY c.ClubName, f.Rating DESC;
-
     '''
     cursor.execute(the_query)
     theData = cursor.fetchall()
