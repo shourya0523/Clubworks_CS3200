@@ -13,7 +13,6 @@ def HomeNav():
 def AboutPageNav():
     st.sidebar.page_link("pages/30_About.py", label="About", icon="🧠")
 
-
 #### ------------------------ Examples for Role of pol_strat_advisor ------------------------
 def PolStratAdvHomeNav():
     st.sidebar.page_link(
@@ -38,7 +37,7 @@ def ApiTestNav():
 
 def PredictionNav():
     st.sidebar.page_link(
-        "pages/11_Prediction.py", label="Regression Prediction", icon="📈"
+        "pages/11_PredictionV2.py", label="Regression Prediction", icon="📈"
     )
 
 
@@ -48,16 +47,14 @@ def ClassificationNav():
     )
 
 
-#### ------------------------ System Admin Role ------------------------
-def AdminPageNav():
-    st.sidebar.page_link("pages/20_Admin_Home.py", label="System Admin", icon="🖥️")
-    st.sidebar.page_link(
-        "pages/21_ML_Model_Mgmt.py", label="ML Model Management", icon="🏢"
-    )
+#### ------------------------ Club President Role ------------------------
+def clubmanagement02():
+    st.sidebar.page_link("pages/02_club_management.py", label="Club Management", icon="🖥️")
+    st.sidebar.page_link("pages/02.1_create_event.py", label="Create Event", icon="🏢")
 
 
 # --------------------------------Links Function -----------------------------------------------
-def SideBarLinks(show_home=False):
+def SideBarLinks(show_home=True):
     """
     This function handles adding links to the sidebar of the app based upon the logged-in user's role, which was put in the streamlit session_state object when logging in.
     """
@@ -102,3 +99,4 @@ def SideBarLinks(show_home=False):
             del st.session_state["role"]
             del st.session_state["authenticated"]
             st.switch_page("Home.py")
+
