@@ -69,9 +69,9 @@ if st.button('Act as Club President',
             type = 'primary', 
             use_container_width=True):
     st.session_state['authenticated'] = True
-    st.session_state['role'] = 'club_president'
+    st.session_state['role'] = 'club_executive'
     st.session_state['first_name'] = 'Tyla'
-    st.session_state['ClubID'] = '1'
+    st.session_state['nuid'] = '456789123'
     st.switch_page('pages/02_club_management.py')
 
 if st.button('Act as Analyst', 
@@ -90,10 +90,19 @@ if st.button('Act as a Student',
     st.session_state['nuid'] = '123456789'
     st.switch_page('pages/14_Student_Profile.py')
     
+
 if st.button('Act as Connor, the Systems Coordinator', 
             type = 'primary', 
             use_container_width=True):
     st.session_state['authenticated'] = True
     st.session_state['role'] = 'coordinator'
     st.session_state['first_name'] = 'Connor'
-    st.switch_page('pages/05_Admin_Dashboard.py')
+    st.switch_page('pages/admin_dashboard.py')
+    
+if st.button('Help',
+            type = 'primary', 
+            use_container_width=True):
+    st.session_state['authenticated'] = True
+    st.session_state['role'] = 'coordinator'
+    st.session_state['first_name'] = 'Connor'
+    st.switch_page('pages/01_Discover.py')

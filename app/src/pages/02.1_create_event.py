@@ -4,10 +4,7 @@ from datetime import datetime
 
 BASE_URL = 'http://api:4000'
 
-if 'ClubID' in st.session_state:
-    club_id = st.session_state['ClubID']
-else:
-    st.switch_page('Home.py')
+
 st.set_page_config(page_title="Create or Update Events", layout="centered")
 st.title("📅 Manage Events")
 tab_create, tab_edit = st.tabs(["Create Event", "Edit Event"])
@@ -66,3 +63,5 @@ with tab_create:
 # -------------------------
 # TAB 2: Edit Event
 # -------------------------
+
+
