@@ -11,6 +11,9 @@ st.set_page_config(
     layout="wide"
 )
 
+from modules.nav import SideBarLinks
+SideBarLinks('admin')
+
 # Create two columns: left for the engagement chart, right for the Inbox
 left_column, right_column = st.columns([2, 1])
 

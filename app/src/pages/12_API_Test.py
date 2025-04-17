@@ -4,6 +4,9 @@ import logging
 import requests
 import streamlit as st
 
+from modules.nav import SideBarLinks
+SideBarLinks('admin')
+
 logging.basicConfig(level=logging.INFO)
 BASE_URL = "http://api:4000"
 

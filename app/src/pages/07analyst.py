@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
+from modules.nav import SideBarLinks
+SideBarLinks('admin')
+
 # Get user's first name
 if 'first_name' in st.session_state:
     first_name = st.session_state['first_name']

@@ -8,6 +8,9 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout='wide')
 
+from modules.nav import SideBarLinks
+SideBarLinks('admin')
+
 BASE_URL = "http://api:4000/ad"
 
 st.sidebar.title("Dashboard Navigation")

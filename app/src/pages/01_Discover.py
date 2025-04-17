@@ -9,6 +9,9 @@ import plotly.graph_objects as go
 
 BASE_URL = "http://api:4000"
 
+from modules.nav import SideBarLinks
+SideBarLinks('admin')
+
 st.set_page_config(
     page_title="Discover",
     page_icon="🔍",
