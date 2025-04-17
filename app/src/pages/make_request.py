@@ -4,14 +4,25 @@ from datetime import datetime, date
 
 BASE_URL = 'http://api:4000'
 
+st.set_page_config(page_title="Request Maker", layout="centered")
+
 if 'nuid' in st.session_state:
     nuid = st.session_state['nuid']
+
     response = requests.get(f'{BASE_URL}/pres/profile/{nuid}')
     response.raise_for_status()
+    
+    data = response.json()
+    
+    if data and isinstance(data, list) and len(data) > 0:
+        CLUB_ID = data[0].get("ClubId")
+        CLUB_NAME = data[0].get("ClubName")
+        FIRST_NAME = data[0].get("FirstName")
+        POSITIONS = data[0].get("Positions")
 
+else:
     st.switch_page('Home.py')
 
-st.set_page_config(page_title="Request Maker", layout="centered")
 st.title("Submit Request")
 
 tab_create, tab_edit = st.tabs(["Make Funding Request", "Make Support Request"])
