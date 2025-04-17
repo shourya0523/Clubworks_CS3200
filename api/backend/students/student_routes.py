@@ -473,39 +473,11 @@ def get_upcoming_events(nuid):
            et.EventType
     FROM Events e
     JOIN Clubs c ON e.ClubId = c.ClubId
-    JOIN Membership m ON c.ClubId = m.ClubID
-    LEFT JOIN Images i ON e.PosterImg = i.ImageID
-    LEFT JOIN EventTypes et ON e.EType = et.EventTypeId
-    WHERE m.NUID = {nuid}
-    AND e.StartTime > NOW()
-    ORDER BY e.StartTime ASC
-    LIMIT 10
-    '''
-        
-    cursor = db.get_db().cursor()
-    cursor.execute(query)
-    
-    the_data = cursor.fetchall()
-    
-    response = make_response(jsonify(the_data))
-    response.status_code = 200
-    
-    return response
-
-@students.route('/attendance/<nuid>', methods=['GET'])
-def get_attendance(nuid):
-    query = f'''
-    SELECT e.EventID, e.Name, e.Description, e.Location, e.StartTime, e.EndTime,
-           c.ClubId, c.ClubName, 
-           i.ImageLink as PosterLink,
-           et.EventType
-    FROM Events e
-    JOIN Clubs c ON e.ClubId = c.ClubId
     JOIN Attendance a ON e.EventID = a.EventID
     LEFT JOIN Images i ON e.PosterImg = i.ImageID
     LEFT JOIN EventTypes et ON e.Type = et.EventTypeId
     WHERE a.NUID = {nuid}
-    ORDER BY e.StartTime DESC
+    ORDER BY e.StartTime ASC
     '''
         
     cursor = db.get_db().cursor()

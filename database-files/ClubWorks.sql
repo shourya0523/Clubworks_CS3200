@@ -488,20 +488,22 @@ INSERT INTO EventTypes (EventType) VALUES
 
 
 -- Insert test data into Events table
--- Adjusted StartTime and EndTime to be more current/future
+-- Adjusted StartTime and EndTime to be more current/future (approx 50/50 split around Sept 2024)
 INSERT INTO Events (Name, Location, Description, StartTime, EndTime, ClubId, PosterImg, Type) VALUES
-('Coding Workshop', 'Room 101', 'Learn the basics of Python programming in this hands-on workshop. Bring your laptop and be ready to code!', '2024-09-10 14:00:00', '2024-09-10 16:00:00', 1, 6, 1), -- ID 1
-('Business Seminar', 'Auditorium', 'Join us for a seminar on entrepreneurship featuring guest speakers from successful startups. Networking opportunity after the event.', '2024-09-15 10:00:00', '2024-09-15 12:00:00', 2, 7, 2), -- ID 2
-('Engineering Social', 'Student Center', 'Meet fellow engineering students and faculty in a casual setting. Refreshments will be provided.', '2024-09-20 18:00:00', '2024-09-20 20:00:00', 3, NULL, 3), -- ID 3
-('Biology Competition', 'Science Building', 'Test your biology knowledge in this day-long competition. Prizes for top performers. Registration required.', '2024-09-25 09:00:00', '2024-09-25 17:00:00', 4, NULL, 4), -- ID 4
-('Psychology Club Meeting', 'Room 205', 'Monthly meeting to discuss upcoming events and initiatives. All psychology majors and interested students welcome.', '2024-10-05 16:00:00', '2024-10-05 17:00:00', 5, NULL, 5), -- ID 5
-('Data Science Guest Lecture', 'Behrakis Hall', 'Industry expert discusses trends in Big Data.', '2024-10-15 17:00:00', '2024-10-15 18:30:00', 6, 12, 6), -- ID 6
-('Marketing Networking Night', 'Cabral Center', 'Connect with marketing professionals from Boston.', '2024-11-05 19:00:00', '2024-11-05 21:00:00', 7, 13, 3), -- ID 7
-('Physics Midterm Study Session', 'Library Room 3', 'Collaborative study session for PHYS 1151.', '2024-10-22 18:00:00', '2024-10-22 20:00:00', 8, NULL, 7), -- ID 8
-('Advanced Python Workshop', 'WVH 110', 'Deep dive into advanced Python concepts and libraries.', '2025-02-12 15:00:00', '2025-02-12 17:00:00', 1, NULL, 1), -- ID 9
-('Entrepreneurship Panel', 'West Village F 020', 'Hear from successful Northeastern alumni entrepreneurs.', '2025-03-20 18:00:00', '2025-03-20 19:30:00', 2, NULL, 6), -- ID 10
-('Design Portfolio Reviews', 'Ryder Hall 150', 'Get 1-on-1 feedback from industry professionals.', '2025-04-10 13:00:00', '2025-04-10 16:00:00', 9, 15, 8), -- ID 11
-('Economic Outlook Debate', 'Curry Ballroom', 'Debate on the future of the US economy.', '2025-04-25 19:00:00', '2025-04-25 20:30:00', 10, NULL, 9); -- ID 12
+-- Recent Past Events
+('Coding Workshop', 'Room 101', 'Learn the basics of Python programming in this hands-on workshop. Bring your laptop and be ready to code!', '2024-08-10 14:00:00', '2024-08-10 16:00:00', 1, 6, 1), -- ID 1 (Past)
+('Business Seminar', 'Auditorium', 'Join us for a seminar on entrepreneurship featuring guest speakers from successful startups. Networking opportunity after the event.', '2024-08-15 10:00:00', '2024-08-15 12:00:00', 2, 7, 2), -- ID 2 (Past)
+('Engineering Social', 'Student Center', 'Meet fellow engineering students and faculty in a casual setting. Refreshments will be provided.', '2024-08-20 18:00:00', '2024-08-20 20:00:00', 3, NULL, 3), -- ID 3 (Past)
+('Biology Competition', 'Science Building', 'Test your biology knowledge in this day-long competition. Prizes for top performers. Registration required.', '2024-08-25 09:00:00', '2024-08-25 17:00:00', 4, NULL, 4), -- ID 4 (Past)
+('Psychology Club Meeting', 'Room 205', 'Monthly meeting to discuss upcoming events and initiatives. All psychology majors and interested students welcome.', '2024-08-28 16:00:00', '2024-08-28 17:00:00', 5, NULL, 5), -- ID 5 (Past)
+('Data Science Guest Lecture', 'Behrakis Hall', 'Industry expert discusses trends in Big Data.', '2024-09-05 17:00:00', '2024-09-05 18:30:00', 6, 12, 6), -- ID 6 (Past)
+-- Upcoming Events
+('Marketing Networking Night', 'Cabral Center', 'Connect with marketing professionals from Boston.', '2024-09-25 19:00:00', '2024-09-25 21:00:00', 7, 13, 3), -- ID 7 (Future)
+('Physics Midterm Study Session', 'Library Room 3', 'Collaborative study session for PHYS 1151.', '2024-10-10 18:00:00', '2024-10-10 20:00:00', 8, NULL, 7), -- ID 8 (Future)
+('Advanced Python Workshop', 'WVH 110', 'Deep dive into advanced Python concepts and libraries.', '2024-10-20 15:00:00', '2024-10-20 17:00:00', 1, NULL, 1), -- ID 9 (Future)
+('Entrepreneurship Panel', 'West Village F 020', 'Hear from successful Northeastern alumni entrepreneurs.', '2024-11-15 18:00:00', '2024-11-15 19:30:00', 2, NULL, 6), -- ID 10 (Future)
+('Design Portfolio Reviews', 'Ryder Hall 150', 'Get 1-on-1 feedback from industry professionals.', '2025-01-20 13:00:00', '2025-01-20 16:00:00', 9, 15, 8), -- ID 11 (Future)
+('Economic Outlook Debate', 'Curry Ballroom', 'Debate on the future of the US economy.', '2025-02-10 19:00:00', '2025-02-10 20:30:00', 10, NULL, 9); -- ID 12 (Future)
 
 
 -- Insert test data into Attendance table
