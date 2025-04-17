@@ -3,42 +3,6 @@ from backend.db_connection import db
 
 students = Blueprint('students', __name__)
 
-@students.route('/student_login', methods=['GET'])
-def student_login():
-    email = request.args.get('email')
-    password = request.args.get('password')
-    
-    if not email or not password:
-        response = make_response(jsonify({
-            'status': 'error',
-            'message': 'Email and password are required'
-        }))
-        response.status_code = 400
-        return response
-    
-    query = '''
-    SELECT NUID
-    FROM Students
-    WHERE Email = %s AND Password = %s;
-    '''
-    
-    cursor = db.get_db().cursor()
-    cursor.execute(query, (email, password))
-    
-    result = cursor.fetchall()
-    
-    if result:
-        response = make_response(result[0]['NUID'])
-        response.status_code = 200
-    else:
-        response = make_response(jsonify({
-            'status': 'error',
-            'message': 'Invalid email or password. Please sign up if you dont have an account.'
-        }))
-        response.status_code = 401
-    
-    return response
-
 @students.route('/get_student_profile/<nuid>', methods=['GET'])
 def get_student(nuid):
     query = f'''

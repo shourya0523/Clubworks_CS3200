@@ -42,47 +42,25 @@ st.write('### HI! As which user would you like to log in?')
 # functionality, we put a button on the screen that the user 
 # can click to MIMIC logging in as that mock user. 
 
-if st.button("Act as John, a Political Strategy Advisor", 
-            type = 'primary', 
-            use_container_width=True):
-    # when user clicks the button, they are now considered authenticated
-    st.session_state['authenticated'] = True
-    # we set the role of the current user
-    st.session_state['role'] = 'pol_strat_advisor'
-    # we add the first name of the user (so it can be displayed on 
-    # subsequent pages). 
-    st.session_state['first_name'] = 'John'
-    # finally, we ask streamlit to switch to another page, in this case, the 
-    # landing page for this particular user type
-    logger.info("Logging in as Political Strategy Advisor Persona")
-    st.switch_page('pages/00_Pol_Strat_Home.py')
 
-if st.button('Act as Mohammad, an USAID worker', 
+if st.button('Act as Tyle, Club President', 
             type = 'primary', 
             use_container_width=True):
     st.session_state['authenticated'] = True
-    st.session_state['role'] = 'usaid_worker'
-    st.session_state['first_name'] = 'Mohammad'
-    st.switch_page('pages/10_USAID_Worker_Home.py')
-
-if st.button('Act as Club President', 
-            type = 'primary', 
-            use_container_width=True):
-    st.session_state['authenticated'] = True
-    st.session_state['role'] = 'club_executive'
+    st.session_state['role'] = 'Executive'
     st.session_state['first_name'] = 'Tyla'
     st.session_state['nuid'] = '456789123'
     st.switch_page('pages/02_club_management.py')
 
-if st.button('Act as Analyst', 
+if st.button('Act as Mary, an Analyst', 
             type = 'primary', 
             use_container_width=True):
     st.session_state['authenticated'] = True
-    st.session_state['role'] = 'analyst'
+    st.session_state['role'] = 'Analyst'
     st.session_state['first_name'] = 'Mary'
     st.switch_page('pages/07analysthome.py')
 
-if st.button('Act as a Student', 
+if st.button('Act as Lucas, a Student', 
             type = 'primary', 
             use_container_width=True):
     st.session_state['authenticated'] = True
@@ -95,22 +73,6 @@ if st.button('Act as Connor, the Systems Coordinator',
             type = 'primary', 
             use_container_width=True):
     st.session_state['authenticated'] = True
-    st.session_state['role'] = 'coordinator'
+    st.session_state['role'] = 'Coordinator'
     st.session_state['first_name'] = 'Connor'
     st.switch_page('pages/admin_dashboard.py')
-    
-if st.button('Help',
-            type = 'primary', 
-            use_container_width=True):
-    st.session_state['authenticated'] = True
-    st.session_state['role'] = 'coordinator'
-    st.session_state['first_name'] = 'Connor'
-    st.switch_page('pages/01_Discover.py')
-
-if st.button('Support Request',
-            type = 'primary', 
-            use_container_width=True):
-    st.session_state['authenticated'] = True
-    st.session_state['role'] = 'Student'
-    st.session_state['nuid'] = '123456789'
-    st.switch_page('pages/support_request.py')

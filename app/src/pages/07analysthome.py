@@ -6,8 +6,15 @@ from modules.nav import SideBarLinks
 
 st.set_page_config(layout = 'wide')
 
-# Show appropriate sidebar links for the role of the currently logged in user
 SideBarLinks()
+if 'authenticated' not in st.session_state:
+    st.session_state['authenticated'] = False
+
+if not st.session_state['authenticated']:
+    st.switch_page('Home')
+    
+if st.session_state['role'] != 'Analyst':
+    st.switch_page('Home')
 
 if 'first_name' in st.session_state:
     first_name = st.session_state['first_name']
