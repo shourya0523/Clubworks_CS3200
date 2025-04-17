@@ -18,7 +18,7 @@ if st.button("➕ Create Event"):
 
 
 if st.button("➕ Make Request"):
-    st.switch_page("make_request.py")
+    st.switch_page("pages/make_request.py")
 
 # Create Tabs
 tab1, tab2, tab3 = st.tabs(["📅 Attendance", "📇 Members", "🗣️ Feedback"])

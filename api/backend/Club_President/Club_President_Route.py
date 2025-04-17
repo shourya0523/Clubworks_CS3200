@@ -150,3 +150,12 @@ def get_event_types():
     rows = cursor.fetchall()
     types = [{"EventTypeID": row["EventTypeID"], "EventType": row["EventType"]} for row in rows]
     return make_response(types, 200)
+
+@club_president.route('/request_types', methods=['GET'])
+def get_request_types():
+    cursor = db.get_db().cursor()
+    query = "SELECT RequestTypeID, RequestType FROM RequestTypes"
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    types = [{"RequestTypeID": row["RequestTypeID"], "RequestType": row["RequestType"]} for row in rows]
+    return make_response(types, 200)

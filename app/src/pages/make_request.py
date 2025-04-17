@@ -1,62 +1,70 @@
 import streamlit as st
 import requests
-from datetime import datetime
+from datetime import datetime, date
 
 BASE_URL = 'http://api:4000'
 
-if 'ClubID' in st.session_state:
-    club_id = st.session_state['ClubID']
-else:
-    st.switch_page('Home.py')
-st.set_page_config(page_title="Support Request Maker", layout="centered")
-st.title(" Submit Request")
+if 'nuid' in st.session_state:
+    nuid = st.session_state['nuid']
+    response = requests.get(f'{BASE_URL}/pres/profile/{nuid}')
+    response.raise_for_status()
 
-def fetch_event_types():
+    st.switch_page('Home.py')
+
+st.set_page_config(page_title="Request Maker", layout="centered")
+st.title("Submit Request")
+
+tab_create, tab_edit = st.tabs(["Make Funding Request", "Make Support Request"])
+
+# Function to fetch request types
+def fetch_request_types():
     try:
-        res = requests.get(f"{BASE_URL}/pres/event_types")
+        res = requests.get(f"{BASE_URL}/pres/request_types")
         if res.status_code == 200:
             return res.json()
         else:
-            st.error("❌ Could not load event types from server.")
+            st.error("Could not load request types from server.")
             return []
     except Exception as e:
-        st.error(f"🚫 Failed to connect to backend: {e}")
+        st.error(f"Failed to connect to backend: {e}")
         return []
 
-# -------------------------
-# TAB 1: Create Event
-# -------------------------
+# TAB 1: Make Funding Request
+
 with tab_create:
-    st.subheader("Create a New Event")
-    with st.form("create_event_form"):
-        name = st.text_input("Event Name")
-        location = st.text_input("Location")
-        event_date = st.date_input("Event Date")
-        start_time_input = st.time_input("Start Time")
-        end_time_input = st.time_input("End Time")
-        start_time = datetime.combine(event_date, start_time_input).isoformat()
-        end_time = datetime.combine(event_date, end_time_input).isoformat()
-        poster_img = st.text_input("Poster Image URL")
-        event_type_list = fetch_event_types()
-        event_type_labels = [t["EventType"] for t in event_type_list]
-        event_type = st.selectbox("Event Type", event_type_labels)
-        create_submit = st.form_submit_button("Create Event")
-        if create_submit:
+    st.subheader("Make Funding Request")
+    with st.form("make_request_form"):
+        description = st.text_input("Request Description")
+        created_time = st.date_input("Created Date", value=date.today())
+
+        request_type_list = fetch_request_types()
+        request_type_labels = [t["RequestType"] for t in request_type_list]
+        request_type = st.selectbox("Request Type", request_type_labels)
+
+        executive_id = st.text_input("Executive ID")
+        executive_club = st.text_input("Executive Club")
+        executive_position = st.text_input("Executive Position")
+
+        submit = st.form_submit_button("Submit Request")
+
+        if submit:
             payload = {
-                "Name": name,
-                "Location": location,
-                "StartTime": str(start_time),
-                "EndTime": str(end_time),
-                "ClubID": club_id,
-                "Type": event_type,
-                "PosterImg": poster_img
+                "RequestDescription": description,
+                "CreatedTime": created_time.isoformat(),
+                "Type": request_type,
+                "ExecutiveID": executive_id,
+                "ExecutiveClub": executive_club,
+                "ExecutivePosition": executive_position
             }
 
             try:
-                response = requests.put(f"{BASE_URL}/pres/create_event", json=payload)
-                if response.status_code == 200:
-                    st.success("✅ Event created successfully!")
+                res = requests.put(f"{BASE_URL}/club_president/make_request", json=payload)
+                if res.status_code == 200:
+                    st.success("Request submitted successfully!")
                 else:
-                    st.error(f"❌ Error: {response.text}")
+                    st.error(f"Submission failed: {res.text}")
             except Exception as e:
-                st.error(f"❌ Failed to reach server: {e}")
+                st.error(f"Failed to submit request: {e}")
+
+# TAB 2: Make Support Requests
+
