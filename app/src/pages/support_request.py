@@ -1,45 +1,64 @@
 import streamlit as st
 import requests
+from datetime import datetime, date
 
-st.title("Submit a Support Request 🛠️")
+BASE_URL = 'http://api:4000'
 
-# Assume user has logged in and we have their NUID
+st.set_page_config(page_title="Request Maker", layout="centered")
+
 if 'nuid' in st.session_state:
     nuid = st.session_state['nuid']
 
-    response = requests.get(f'requests.get(f"http://api:4000/s/student_login/{nuid}")')
+    response = requests.get(f'{BASE_URL}/pres/profile/{nuid}')
     response.raise_for_status()
+    
+    data = response.json()
+
 else:
     st.switch_page('Home.py')
 
-if nuid:
-    # Get request types
-    type_response = requests.get(f"http://api:4000/students/get_request_types/{nuid}")
-    
-    if type_response.status_code == 200:
-        request_types = type_response.json()
-        type_options = {item['RequestType']: item['RequestTypeID'] for item in request_types}
-        
-        selected_type = st.selectbox("Request Type", list(type_options.keys()))
-        request_description = st.text_area("Describe your request")
+st.title("Submit Request")
 
-        if st.button("Submit Request"):
-            if selected_type and request_description:
-                payload = {
-                    "Type": type_options[selected_type],
-                    "RequestDescription": request_description
-                }
+tab_edit, = st.tabs(["Make Support Request"])
 
-                post_response = requests.post(
-                    f"http://api:4000/students/support_request/{nuid}",
-                    json=payload
-                )
 
-                if post_response.status_code == 200:
-                    st.success("✅ Your support request was submitted!")
+def fetch_support_request_types():
+    try:
+        res = requests.get(f"{BASE_URL}/pres/support_request_types")
+        if res.status_code == 200:
+            return res.json()
+        else:
+            st.error("Could not load support request types from server.")
+            return []
+    except Exception as e:
+        st.error(f"Failed to connect to backend: {e}")
+        return []
+
+# TAB 2: Make Support Requests
+with tab_edit:
+    st.subheader("Make Support Request")
+    with st.form("make_support_form"):
+        description = st.text_input("Request Description")
+
+        # Fetch support request types
+        request_type_list = fetch_support_request_types()
+
+        # Map label to ID
+        request_type_map = {t["SupportType"]: t["SupportTypeID"] for t in request_type_list}
+        request_type_label = st.selectbox("Request Type", list(request_type_map.keys()))
+
+        submit = st.form_submit_button("Submit Request")
+
+        if submit:
+            payload = {
+                "RequestDescription": description,
+                "SupportTypeID": request_type_map[request_type_label]  # Send the ID to backend
+            }
+            try:
+                res = requests.put(f"{BASE_URL}/club_president/make_support_request", json=payload)
+                if res.status_code == 200:
+                    st.success("Support request submitted successfully!")
                 else:
-                    st.error("❌ Failed to submit the request.")
-            else:
-                st.warning("Please fill in all fields.")
-    else:
-        st.error("❌ Failed to fetch request types.")
+                    st.error(f"Submission failed: {res.text}")
+            except Exception as e:
+                st.error(f"Failed to submit request: {e}")

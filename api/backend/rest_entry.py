@@ -8,6 +8,7 @@ from backend.analyst.analyst_route import analyst
 from backend.students.student_routes import students
 from backend.club_president.club_president_routes import club_president
 from backend.admin.admin_routes import admin
+from backend.support_req.support_request_routes import support_req
 
 import os # HANDLES pads 
 from dotenv import load_dotenv # loads wtv is in env
@@ -64,6 +65,7 @@ def create_app():
     app.register_blueprint(club_president,   url_prefix = '/pres')
     app.register_blueprint(students,   url_prefix = '/s')
     app.register_blueprint(admin,   url_prefix = '/ad')
+    app.register_blueprint(support_req,   url_prefix = '/sr')
 
     # Don't forget to return the app object
     return app
