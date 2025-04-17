@@ -373,6 +373,40 @@ def attend_event():
     response.status_code = 201
     return response
 
+# New route to get feedback for a specific club
+@students.route('/feedback/<club_id>', methods=['GET'])
+def get_club_feedback(club_id):
+    """Fetches anonymous feedback (rating and description) for a given club ID."""
+    query = '''
+    SELECT
+        Rating,
+        Description
+    FROM
+        Feedback
+    WHERE
+        ClubID = %s
+    ORDER BY
+        FeedbackId DESC; -- Show newest feedback first, or ORDER BY Rating DESC
+    '''
+    try:
+        cursor = db.get_db().cursor()
+        cursor.execute(query, (club_id,))
+        feedback_data = cursor.fetchall()
+
+        if feedback_data is None:
+             feedback_data = []
+
+        response = make_response(jsonify(feedback_data))
+        response.status_code = 200
+    except Exception as e:
+        current_app.logger.error(f"Error fetching feedback for ClubID {club_id}: {e}")
+        response = make_response(jsonify({"status": "error", "message": "Failed to fetch feedback"}))
+        response.status_code = 500
+    finally:
+        if cursor:
+            cursor.close()
+
+
 @students.route('/interests', methods=['GET'])
 def get_all_interests():
     query = '''
@@ -420,6 +454,108 @@ def get_student_interests(nuid):
     response.status_code = 200
     
     return response
+
+@students.route('/recommendations/<nuid>', methods=['GET'])
+def get_recommendations(nuid):
+    """Fetches recommended clubs/events based on interests, including interest names."""
+    cursor = None
+    try:
+        cursor = db.get_db().cursor()
+
+        # 1. Get student's interest IDs and Names
+        interest_query = '''
+        SELECT i.InterestID, i.InterestName
+        FROM Interested it
+        JOIN Interests i ON it.InterestID = i.InterestID
+        WHERE it.NUID = %s;
+        '''
+        cursor.execute(interest_query, (nuid,))
+        student_interests_result = cursor.fetchall()
+        student_interest_ids = {row['InterestID'] for row in student_interests_result}
+        student_interest_names = {row['InterestName'] for row in student_interests_result} # Use set for uniqueness
+
+        # Prepare default empty response structure
+        response_data = {
+            "student_interest_names": list(student_interest_names),
+            "recommended_clubs": [],
+            "recommended_events": []
+        }
+
+        if not student_interest_ids:
+            # Return early if the student has no interests specified
+            return make_response(jsonify(response_data), 200)
+
+        # 2. Get all Interest ID -> Name mappings (needed later)
+        all_interests_query = 'SELECT InterestID, InterestName FROM Interests'
+        cursor.execute(all_interests_query)
+        interest_map = {row['InterestID']: row['InterestName'] for row in cursor.fetchall()}
+
+        # 3. Get all clubs with their associated interest IDs and details
+        clubs_query = '''
+        SELECT
+            c.ClubId, c.ClubName, c.Description, c.LinkTree, c.CalendarLink, c.Complete,
+            i.ImageLink as LogoLink, AVG(f.Rating) AS Rating,
+            GROUP_CONCAT(DISTINCT at.InterestID SEPARATOR ',') AS InterestIDs
+        FROM Clubs c
+        LEFT JOIN Images i ON c.LogoImg = i.ImageID
+        LEFT JOIN Feedback f ON f.ClubID = c.ClubId
+        LEFT JOIN AppealsTo at ON c.ClubId = at.ClubId
+        WHERE at.InterestID IS NOT NULL  -- Ensure club has at least one interest
+        GROUP BY c.ClubId, c.ClubName, c.Description, c.LinkTree, c.CalendarLink, c.Complete, i.ImageLink
+        HAVING InterestIDs IS NOT NULL;
+        '''
+        cursor.execute(clubs_query)
+        all_clubs = cursor.fetchall()
+
+        # 4. Filter clubs based on matching interests and add interest names
+        recommended_clubs = []
+        recommended_club_ids = set()
+        for club in all_clubs:
+            club_interest_ids_str = club.pop('InterestIDs', '') # Get IDs and remove from dict
+            if club_interest_ids_str:
+                club_interest_ids = set(map(int, club_interest_ids_str.split(',')))
+                if student_interest_ids.intersection(club_interest_ids):
+                    club_interest_names = {interest_map[id] for id in club_interest_ids if id in interest_map}
+                    club['interest_names'] = list(club_interest_names) # Add names list
+
+                    if club.get('Rating') is not None:
+                        club['Rating'] = float(club['Rating'])
+
+                    recommended_clubs.append(club)
+                    recommended_club_ids.add(club['ClubId'])
+
+        response_data["recommended_clubs"] = recommended_clubs
+
+        # 5. Get upcoming events hosted by the recommended clubs (if any)
+        if recommended_club_ids:
+            events_query = '''
+            SELECT
+                e.EventID, e.Name, e.Description, e.Location, e.StartTime, e.EndTime,
+                c.ClubId, c.ClubName, i.ImageLink as PosterLink, et.EventType
+            FROM Events e
+            JOIN Clubs c ON e.ClubId = c.ClubId
+            LEFT JOIN Images i ON e.PosterImg = i.ImageID
+            LEFT JOIN EventTypes et ON e.Type = et.EventTypeId
+            WHERE e.StartTime > NOW() AND e.ClubId IN %s
+            ORDER BY e.StartTime ASC;
+            '''
+            club_ids_tuple = tuple(recommended_club_ids)
+            cursor.execute(events_query, (club_ids_tuple,))
+            response_data["recommended_events"] = cursor.fetchall() # Update response
+
+        response = make_response(jsonify(response_data))
+        response.status_code = 200
+
+    except Exception as e:
+        current_app.logger.error(f"Error fetching recommendations for NUID {nuid}: {e}")
+        response = make_response(jsonify({"status": "error", "message": "Failed to fetch recommendations"}))
+        response.status_code = 500
+    finally:
+        if cursor:
+            cursor.close()
+
+    return response
+
 
 @students.route('/recommended_clubs/<nuid>', methods=['GET'])
 def get_recommended_clubs(nuid):
@@ -599,10 +735,6 @@ def get_student_applications(nuid):
         current_app.logger.error(f"Error fetching student applications for NUID {nuid}: {e}")
         response = make_response(jsonify({"status": "error", "message": "Failed to fetch applications"}))
         response.status_code = 500
-    finally:
-        if cursor:
-            cursor.close()
-
     return response
 
 @students.route('/all_students/<nuid>', methods=['GET'])
@@ -677,4 +809,81 @@ def follow_student():
         if cursor:
             cursor.close()
 
+    return response
+
+@students.route('/personal_network/<nuid>', methods=['GET'])
+def get_personal_network(nuid):
+    """
+    Returns a network of the student, clubs they belong to, and other students who share those clubs (2 degrees).
+    """
+    cursor = db.get_db().cursor()
+
+    clubs_query = '''
+        SELECT c.ClubId, c.ClubName
+        FROM Membership m
+        JOIN Clubs c ON m.ClubID = c.ClubId
+        WHERE m.NUID = %s
+    '''
+    cursor.execute(clubs_query, (nuid,))
+    clubs = cursor.fetchall()
+    club_ids = [club['ClubId'] for club in clubs]
+
+    if club_ids:
+        format_strings = ','.join(['%s'] * len(club_ids))
+        students_query = f'''
+            SELECT DISTINCT s.NUID, s.FirstName, s.LastName, m.ClubID
+            FROM Membership m
+            JOIN Students s ON m.NUID = s.NUID
+            WHERE m.ClubID IN ({format_strings}) AND s.NUID != %s
+        '''
+        cursor.execute(students_query, (*club_ids, nuid))
+        students = cursor.fetchall()
+    else:
+        students = []
+
+    nodes = []
+    edges = []
+
+    cursor.execute('SELECT FirstName, LastName FROM Students WHERE NUID = %s', (nuid,))
+    self_info = cursor.fetchone()
+    self_label = f"{self_info['FirstName']} {self_info['LastName']} (You)"
+    nodes.append({"id": nuid, "label": self_label, "type": "student"})
+
+    for club in clubs:
+        nodes.append({"id": f"club_{club['ClubId']}", "label": club['ClubName'], "type": "club"})
+        edges.append({"source": nuid, "target": f"club_{club['ClubId']}", "type": "membership"})
+
+    added_students = set()
+    for student in students:
+        student_id = student['NUID']
+        if student_id not in added_students:
+            nodes.append({"id": student_id, "label": f"{student['FirstName']} {student['LastName']}", "type": "student"})
+            added_students.add(student_id)
+        edges.append({"source": student_id, "target": f"club_{student['ClubID']}", "type": "membership"})
+
+    response = make_response(jsonify({"nodes": nodes, "edges": edges}))
+    response.status_code = 200
+    return response
+
+@students.route('/attendance/<nuid>', methods=['GET'])
+def get_student_attendance(nuid):
+    """
+    Returns all events attended by the student, including event name, club name, and start time.
+    """
+    query = '''
+    SELECT 
+        e.Name,
+        e.StartTime,
+        c.ClubName
+    FROM Attendance a
+    JOIN Events e ON a.EventID = e.EventID
+    JOIN Clubs c ON e.ClubId = c.ClubId
+    WHERE a.NUID = %s
+    ORDER BY e.StartTime DESC
+    '''
+    cursor = db.get_db().cursor()
+    cursor.execute(query, (nuid,))
+    data = cursor.fetchall()
+    response = make_response(jsonify(data))
+    response.status_code = 200
     return response

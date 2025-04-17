@@ -4,6 +4,7 @@ streamlit
 streamlit-extras
 world-bank-data
 matplotlib
+matplotlib.venn
 numpy
 pydeck
 requests

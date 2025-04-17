@@ -4,6 +4,9 @@ import pandas as pd
 import requests
 import datetime
 from modules.filterframe import filter_dataframe
+import streamlit.components.v1 as components
+import matplotlib.pyplot as plt
+from matplotlib_venn import venn2, venn2_circles
 
 BASE_URL = "http://api:4000"
 
@@ -48,8 +51,41 @@ def follow_student_action(followee_nuid):
              st.warning(response.json().get('message', "Could not follow student"))
 
 
+def show_feedback_dialog(club_id, club_name):
+    """Fetches feedback and displays it in a dialog."""
+    try:
+        feedback_response = requests.get(f"{BASE_URL}/s/feedback/{club_id}")
+        feedback_data = feedback_response.json()
+
+        @st.dialog(f"Feedback for {club_name}")
+        def display_feedback_content():
+            """This function defines the content inside the dialog."""
+            if feedback_data:
+                st.write(f"Showing feedback for: **{club_name}**")
+                st.divider()
+                for feedback_item in feedback_data:
+                    rating = feedback_item.get('Rating')
+                    description = feedback_item.get('Description', 'No comment provided.')
+                    if rating is not None:
+                        st.write(f"Rating: {'⭐' * rating} ({rating}/5)")
+                    else:
+                        st.write("Rating: N/A")
+                    st.caption(f"Comment: {description}")
+                    st.divider()
+            else:
+                st.info("No feedback has been submitted for this club yet.")
+
+
+        display_feedback_content()
+
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching feedback: {e}")
+    except Exception as e:
+        st.error(f"An error occurred while displaying feedback: {e}")
 st.title("🔍 Discover")
 st.write("Explore clubs, programs, and events at Northeastern")
+
+tab_rec, tab1, tab2, tab3, tab4 = st.tabs(["⭐ Recommended", "Clubs", "Applications", "Events", "Students"])
 
 if 'authenticated' not in st.session_state:
     st.session_state['authenticated'] = True
@@ -57,7 +93,6 @@ if 'authenticated' not in st.session_state:
     st.session_state['first_name'] = 'Lucas'
     st.session_state['nuid'] = '123456789'
 
-tab1, tab2, tab3, tab4 = st.tabs(["Clubs", "Applications", "Events", "Students"]) 
 
 with tab1:
     st.header("Explore Clubs")
@@ -71,8 +106,8 @@ with tab1:
             clubs_df = pd.DataFrame(clubs_data)
         
             if 'Rating' in clubs_df.columns:
-                clubs_df['Rating'] = clubs_df['Rating']
-            
+                 clubs_df['Rating'] = pd.to_numeric(clubs_df['Rating'], errors='coerce')
+
             filtered_clubs = filter_dataframe(clubs_df,
                                               buttonkey='clubs',
                                               exclude=['ClubId',
@@ -81,32 +116,46 @@ with tab1:
                                                        'LinkTree',
                                                        'LogoLink',
                                                        'CalendarLink'])
-            
+
             cols = st.columns(3)
             
             for i, (_, club) in enumerate(filtered_clubs.iterrows()):
                 with cols[i % 3]:
                     with st.container(border=True):
-                        if 'ImageLink' in club and club['ImageLink']:
-                            st.image(club['ImageLink'], width=100)
+                        logo_url = club.get('LogoLink', "https://via.placeholder.com/100")
+                        if not logo_url:
+                            logo_url = "https://via.placeholder.com/100"
+                        st.image(logo_url, width=100)
+
+                        st.subheader(club.get('ClubName', 'N/A'))
+
+                        description = club.get('Description', '')
+                        if description:
+                            st.write(description[:150] + "..." if len(description) > 150 else description)
+
+                        rating_value = club.get('Rating')
+                        club_id = club.get('ClubId')
+                        club_name = club.get('ClubName', 'This Club')
+
+                        if pd.notna(rating_value) and club_id is not None:
+                            rating_display = f"⭐ {rating_value:.1f}/5"
+                            st.button(rating_display,
+                                      key=f"feedback_btn_{club_id}_{i}",
+                                      on_click=show_feedback_dialog,
+                                      args=(club_id, club_name),
+                                      help=f"Click to see feedback for {club_name}")
                         else:
-                            st.image("https://via.placeholder.com/100", width=100)
-                            
-                        st.subheader(club['ClubName'])
-                        
-                        if 'Description' in club and club['Description']:
-                            st.write(club['Description'][:150] + "..." if len(club['Description']) > 150 else club['Description'])
-                        
-                        if 'Rating' in club and club['Rating']:
-                            st.write(f"⭐ {club['Rating']}/5")
-                        
-                        if 'LinkTree' in club and club['LinkTree']:
-                            st.link_button('LinkTree', club['LinkTree'])
-                        
-                        if 'CalendarLink' in club and club['CalendarLink']:
-                            st.link_button('Calendar', club['CalendarLink'])
+                            st.caption("No rating yet")
+
+                        btn_cols = st.columns(2)
+                        with btn_cols[0]:
+                            if club.get('LinkTree'):
+                                st.link_button('LinkTree', club['LinkTree'], use_container_width=True)
+                        with btn_cols[1]:
+                            if club.get('CalendarLink'):
+                                st.link_button('Calendar', club['CalendarLink'], use_container_width=True)
         else:
-            st.info("No clubs found.")
+            st.info("No clubs found matching criteria.")
 
 with tab2:
     st.header("Explore Program Applications")
@@ -131,6 +180,7 @@ with tab2:
                 'application_name': app_name
             }
         )
+        
         if response.status_code == 201:
             st.success(f"Successfully added '{app_name}' to your applications!")
             st.rerun()
@@ -247,6 +297,74 @@ with tab2:
         - Follow up after submitting your application
         """)
 
+with tab3:
+     st.header("Events")
+ 
+     events_response = requests.get(f"{BASE_URL}/s/events")
+ 
+     if events_response.status_code == 200:
+         events_data = events_response.json()
+ 
+         if events_data:
+             events_df = pd.DataFrame(events_data)
+ 
+             if 'StartTime' in events_df.columns:
+                 events_df['StartTime'] = pd.to_datetime(events_df['StartTime'])
+                 events_df['FormattedStartTime'] = events_df['StartTime'].dt.strftime('%B %d, %Y - %I:%M %p')
+ 
+             if 'EndTime' in events_df.columns:
+                 events_df['EndTime'] = pd.to_datetime(events_df['EndTime'])
+                 events_df['FormattedEndTime'] = events_df['EndTime'].dt.strftime('%I:%M %p')
+ 
+             events_df['DaysUntil'] = (events_df['StartTime'] - datetime.datetime.now()).dt.days
+             
+             filtered_events = filter_dataframe(
+                                                events_df,
+                                                buttonkey='events',
+                                                exclude=['EventID',
+                                                         'PosterLink',
+                                                         'FormattedStartTime'
+                                                         , 'FormattedEndTime'])
+            
+             for _, event in filtered_events.iterrows():
+                 with st.container(border=True):
+                     cols = st.columns([3, 7])
+ 
+                     with cols[0]:
+                         if 'PosterLink' in event and event['PosterLink']:
+                             st.image(event['PosterLink'], width=200)
+                         else:
+                             if 'ClubName' in event:
+                                 st.subheader(event['ClubName'])
+                             st.caption("No event image available")
+ 
+                     with cols[1]:
+                         st.subheader(event['Name'])
+ 
+                         if 'PosterLink' in event and event['PosterLink'] and 'ClubName' in event:
+                              st.write(f"**Organized by:** {event['ClubName']}")
+                         elif 'ClubName' not in event:
+                              st.write(f"**Organized by:** Unknown")
+ 
+ 
+                         if 'EventType' in event:
+                             st.write(f"**Event Type:** {event['EventType']}")
+ 
+                         if 'Location' in event:
+                             st.write(f"**Location:** {event['Location']}")
+ 
+                         if 'FormattedStartTime' in event and 'FormattedEndTime' in event:
+                             st.write(f"**When:** {event['FormattedStartTime']} to {event['FormattedEndTime']}")
+ 
+                         if 'EventID' in event:
+                             st.button("RSVP to Event",
+                                       key=f"event_{event['EventID']}",
+                                       type="primary",
+                                       on_click=lambda event_id=event['EventID']: rsvp_to_event(event_id))
+         else:
+             st.info("No upcoming events found.")
+     else:
+         st.error(f"Error fetching events: {events_response.status_code}")
 
 with tab4:
     st.header("Discover Students")
@@ -297,10 +415,126 @@ with tab4:
 
         else:
             st.info("Could not load student data.")
+  
+with tab_rec:
+    st.header("⭐ Recommended For You")
+    st.write("Clubs and events tailored to your interests.")
 
-        st.markdown("---")
-        st.subheader("Your Network")
-        st.info("Network graph functionality will be added here.")
+    if 'nuid' in st.session_state:
+        current_nuid = st.session_state['nuid']
+        try:
+            rec_response = requests.get(f"{BASE_URL}/s/recommendations/{current_nuid}")
+
+            rec_data = rec_response.json()
+            student_interest_names = set(rec_data.get('student_interest_names', []))
+            recommended_clubs = rec_data.get('recommended_clubs', [])
+            recommended_events = rec_data.get('recommended_events', [])
+
+            if not recommended_clubs and not recommended_events:
+                st.info("We couldn't find specific recommendations based on your current interests. Try adding more interests to your profile or explore the other tabs!")
+
+            if recommended_clubs and student_interest_names:
+                st.subheader("Interest Overlap")
+                all_recommended_interests = set()
+                for club in recommended_clubs:
+                    all_recommended_interests.update(club.get('interest_names', []))
+
+                relevant_recommended_interests = all_recommended_interests.intersection(student_interest_names)
+
+                if len(student_interest_names) > 0 and len(relevant_recommended_interests) > 0 :
+                    try:
+                        fig, ax = plt.subplots()
+                        v = venn2(
+                            subsets=(student_interest_names, relevant_recommended_interests),
+                            set_labels=('Your Interests', 'Recommended Club Interests'),
+                            set_colors=('skyblue', 'lightgreen'),
+                            alpha=0.7,
+                            ax=ax
+                        )
+                        
+                        plt.title("Overlap: Your Interests vs. Recommended Clubs' Interests")
+                        st.pyplot(fig)
+
+                        shared_interests = student_interest_names.intersection(relevant_recommended_interests)
+                        if shared_interests:
+                             st.write("Interests shared with recommended clubs:")
+                             st.write(f"`{', '.join(shared_interests)}`")
+
+                    except Exception as plot_err:
+                         st.warning(f"Could not generate interest overlap visualization: {plot_err}")
+                else:
+                    st.caption("Not enough data to show interest overlap visualization.")
+                st.divider() 
 
 
-    
+            if recommended_clubs:
+                st.subheader("Recommended Clubs")
+                rec_clubs_df = pd.DataFrame(recommended_clubs)
+                if 'Rating' in rec_clubs_df.columns:
+                    rec_clubs_df['Rating'] = pd.to_numeric(rec_clubs_df['Rating'], errors='coerce')
+
+                cols_rec_clubs = st.columns(3)
+                for i, (_, club) in enumerate(rec_clubs_df.iterrows()):
+                     with cols_rec_clubs[i % 3]:
+                        with st.container(border=True):
+                            logo_url = club.get('LogoLink', "https://via.placeholder.com/100")
+                            if not logo_url: logo_url = "https://via.placeholder.com/100"
+                            st.image(logo_url, width=100)
+                            st.subheader(club.get('ClubName', 'N/A'))
+                            desc = club.get('Description', '')
+                            if desc: st.write(desc[:150] + "..." if len(desc) > 150 else desc)
+
+                            rating_value = club.get('Rating')
+                            club_id = club.get('ClubId')
+                            club_name = club.get('ClubName', 'This Club')
+                            if pd.notna(rating_value) and club_id is not None:
+                                rating_display = f"⭐ {rating_value:.1f}/5"
+                                st.button(rating_display, key=f"rec_feedback_btn_{club_id}_{i}",
+                                          on_click=show_feedback_dialog, args=(club_id, club_name),
+                                          help=f"Click to see feedback for {club_name}")
+                            else:
+                                st.caption("No rating yet")
+
+                            btn_cols_rec = st.columns(2)
+                            with btn_cols_rec[0]:
+                                if club.get('LinkTree'): st.link_button('LinkTree', club['LinkTree'], use_container_width=True)
+                            with btn_cols_rec[1]:
+                                if club.get('CalendarLink'): st.link_button('Calendar', club['CalendarLink'], use_container_width=True)
+                st.divider() 
+
+            if recommended_events:
+                st.subheader("Recommended Events")
+                rec_events_df = pd.DataFrame(recommended_events)
+                if 'StartTime' in rec_events_df.columns:
+                    rec_events_df['StartTime'] = pd.to_datetime(rec_events_df['StartTime'])
+                    rec_events_df['FormattedStartTime'] = rec_events_df['StartTime'].dt.strftime('%b %d, %Y - %I:%M %p')
+                if 'EndTime' in rec_events_df.columns:
+                    rec_events_df['EndTime'] = pd.to_datetime(rec_events_df['EndTime'])
+                    rec_events_df['FormattedEndTime'] = rec_events_df['EndTime'].dt.strftime('%I:%M %p')
+
+                for _, event in rec_events_df.iterrows():
+                    with st.container(border=True):
+                        cols_rec_event = st.columns([3, 7])
+                        with cols_rec_event[0]:
+                            poster = event.get('PosterLink')
+                            if poster: st.image(poster, width=200)
+                            else: st.caption("No event image")
+                        with cols_rec_event[1]:
+                            st.subheader(event.get('Name', 'N/A'))
+                            st.write(f"**Organized by:** {event.get('ClubName', 'N/A')}")
+                            if event.get('EventType'): st.write(f"**Type:** {event.get('EventType')}")
+                            if event.get('Location'): st.write(f"**Location:** {event.get('Location')}")
+                            start_time = event.get('FormattedStartTime', 'N/A')
+                            end_time = event.get('FormattedEndTime', '')
+                            st.write(f"**When:** {start_time}{' to ' + end_time if end_time else ''}")
+                            event_id = event.get('EventID')
+                            if event_id:
+                                st.button("RSVP", key=f"rec_event_{event_id}", type="primary",
+                                          on_click=rsvp_to_event, args=(event_id,))
+            else:
+                 if recommended_clubs:
+                     st.info("No upcoming events found from your recommended clubs.")
+
+
+        except requests.exceptions.RequestException as e:
+            st.error(f"Could not load recommendations: {e}")

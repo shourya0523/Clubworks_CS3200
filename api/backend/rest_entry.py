@@ -6,7 +6,7 @@ from flask import Flask
 from backend.db_connection import db
 from backend.analyst.analyst_route import analyst
 from backend.students.student_routes import students
-from backend.club_president.club_president_route import club_president
+from backend.club_president.club_president_routes import club_president
 from backend.admin.admin_routes import admin
 
 import os # HANDLES pads 
