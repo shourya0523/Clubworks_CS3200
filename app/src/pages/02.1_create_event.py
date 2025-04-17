@@ -101,7 +101,9 @@ with tab_edit:
             sel_name = st.selectbox("Select an event to edit", list(name_to_id.keys()))
 
             if st.button("Load Event"):
-                sel_id = name_to_id[sel_name]                 # the chosen EventID
+                sel_id = name_to_id[sel_name]
+                st.session_state['edit_event_id'] = sel_id
+                              # the chosen EventID
                 res = requests.get(
                     f"{BASE_URL}/pres/loadevent/{sel_id}",
                 )
@@ -142,7 +144,6 @@ with tab_edit:
                                 "Event Type", event_type_labels, index=idx
                             )
 
-                            # required submit button INSIDE the form
                             submit_update = st.form_submit_button("Save Changes")
 
                         # ── Step 3: send update after Save is clicked ─
@@ -156,14 +157,18 @@ with tab_edit:
                                 "PosterImg": poster_img
                             }
 
-                            try:
-                                update = requests.put(
-                                    f"{BASE_URL}/pres/edit_event/{evt['EventID']}",
-                                    json=payload
-                                )
-                                if update.status_code == 200:
-                                    st.success("✅ Event updated!")
-                                else:
-                                    st.error(f"❌ {update.text}")
-                            except Exception as e:
-                                st.error(f"🚫 Failed to reach server: {e}")
+                            event_id = st.session_state.get("edit_event_id")
+                            if event_id is None:
+                                st.error("⚠️ No event selected—click ‘Load Event’ first.")
+                            else:
+                                try:
+                                    update = requests.put(
+                                        f"{BASE_URL}/pres/edit_event/{event_id}",
+                                        json=payload
+                                    )
+                                    if update.status_code == 200:
+                                        st.success("✅ Event updated!")
+                                    else:
+                                        st.error(f"❌ {update.text}")
+                                except Exception as e:
+                                    st.error(f"🚫 Failed to reach server: {e}")
