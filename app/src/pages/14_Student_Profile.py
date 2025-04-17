@@ -138,6 +138,52 @@ if response.status_code == 200:
                     
                     st.plotly_chart(fig, use_container_width=True)
                     
+                    st.subheader("Interests Overlap with Your Clubs")
+                    
+                    student_interests = set()
+                    if 'Interests' in student and student['Interests']:
+                        student_interests = set([i.strip() for i in student['Interests'].split(',') if i.strip()])
+                    
+                    club_interest_map = {}
+                    if memberships_data:
+                        for club in memberships_data:
+                            club_name = club.get('ClubName', 'Unknown Club')
+                            club_id = club.get('ClubId')
+                            club_interests_resp = re.get(f"{BASE_URL}/s/club_interests/{club_id}")
+                            if club_interests_resp.status_code == 200:
+                                club_interests = club_interests_resp.json().get('Interests', '')
+                                club_interest_map[club_name] = set([i.strip() for i in club_interests.split(',') if i.strip()])
+                            else:
+                                club_interest_map[club_name] = set()
+                    
+                    if student_interests and club_interest_map:
+                        interests_sorted = sorted(student_interests)
+                        clubs_sorted = list(club_interest_map.keys())
+                        matrix = []
+                        for interest in interests_sorted:
+                            row = []
+                            for club in clubs_sorted:
+                                row.append(1 if interest in club_interest_map[club] else 0)
+                            matrix.append(row)
+                    
+                        fig = go.Figure(data=go.Heatmap(
+                            z=matrix,
+                            x=clubs_sorted,
+                            y=interests_sorted,
+                            colorscale='Reds',
+                            showscale=False,
+                            hovertemplate='Interest: %{y}<br>Club: %{x}<br>Shared: %{z}<extra></extra>'
+                        ))
+                        fig.update_layout(
+                            title="Your Interests vs. Club Interests",
+                            xaxis_title="Club",
+                            yaxis_title="Your Interest",
+                            height=300 + 30*len(interests_sorted)
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.info("Not enough data to display interests overlap.")
+                    
                     st.subheader("Recent Events Attended")
                     for event in attendance_data[:5]:  
                         event_time = event.get('StartTime', '')

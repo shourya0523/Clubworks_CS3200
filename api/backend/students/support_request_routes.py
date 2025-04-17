@@ -1,4 +1,4 @@
-@students.route('/get_request_types/<nuid>', methods=['GET'])
+@students.route('/get_request_types/<nuid>', methods=['POST'])
 def get_request_types(nuid):
     cursor = db.get_db().cursor()
     query = "SELECT RequestTypeID, RequestType FROM RequestTypes"
@@ -7,11 +7,11 @@ def get_request_types(nuid):
     types = [{"RequestTypeID": row["RequestTypeID"], "RequestType": row["RequestType"]} for row in rows]
     return make_response(types, 200)
 
-@students.route('/support_request/<nuid>', methods=['POST'])
-def support_request(nuid):
-    current_app.logger.info('POST /support_request')
-    s_request_info = request.get_json()
-    s_type = s_request_info['Type']
+@students.route('/support_request/<nuid>', methods=['PUT'])
+def support_request():
+    current_app.logger.info('PUT /student_routes')
+    s_request_info = s_request_info.json
+    s_request_id = s_request_info['RequestID']
     s_request_description = s_request_info['RequestDescription']
 
     query = '''

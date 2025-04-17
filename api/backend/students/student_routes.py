@@ -115,6 +115,21 @@ def get_feedback():
     
     return response
 
+@students.route('/feedback/<club_id>', methods=['GET'])
+def get_feedback_for_club(club_id):
+    query = '''
+    SELECT c.ClubName, f.Description, f.Rating
+    FROM Feedback f
+        JOIN Clubs c ON f.ClubID = c.ClubId
+    WHERE c.ClubId = %s;
+    '''
+    cursor = db.get_db().cursor()
+    cursor.execute(query, (club_id,))
+    the_data = cursor.fetchall()
+    response = make_response(jsonify(the_data))
+    response.status_code = 200
+    return response
+
 @students.route('/followcount/<nuid>', methods=['GET'])
 def get_followcount(nuid):
     query = f'''
@@ -556,7 +571,6 @@ def get_recommendations(nuid):
 
     return response
 
-
 @students.route('/recommended_clubs/<nuid>', methods=['GET'])
 def get_recommended_clubs(nuid):
     query = f'''
@@ -887,3 +901,22 @@ def get_student_attendance(nuid):
     response = make_response(jsonify(data))
     response.status_code = 200
     return response
+
+@students.route('/club_interests/<clubid>', methods=['GET'])
+def get_club_interests(clubid):
+    """
+    Returns a comma-separated string of interest names for the given club.
+    """
+    query = '''
+    SELECT GROUP_CONCAT(i.InterestName SEPARATOR ', ') AS Interests
+    FROM AppealsTo a
+    JOIN Interests i ON a.InterestID = i.InterestID
+    WHERE a.ClubId = %s
+    '''
+    cursor = db.get_db().cursor()
+    cursor.execute(query, (clubid,))
+    data = cursor.fetchone()
+    if data and data['Interests']:
+        return jsonify({'Interests': data['Interests']})
+    else:
+        return jsonify({'Interests': ''})
