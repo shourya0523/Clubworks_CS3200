@@ -38,7 +38,7 @@ if st.button("➕ Create Event"):
 if st.button("➕ Make Request"):
     st.switch_page("pages/make_request.py")
 
-tab1, tab2, tab3 = st.tabs(["📅 Attendance", "📇 Members", "🗣️ Feedback"])
+tab1, tab2, tab3, tab4 = st.tabs(["📅 Attendance", "📇 Members", "🗣️ Feedback", "📋 Programs & Applications"])
 
 # TAB 1: Attendance Section
 with tab1:
@@ -89,7 +89,6 @@ with tab3:
 print(st.session_state['nuid'])
 
 # TAB 4: Programs & Applications
-tab4, = st.tabs(["📋 Programs & Applications"])
 
 with tab4:
     st.subheader("Programs for Your Club")
@@ -98,7 +97,6 @@ with tab4:
         all_programs = requests.get(f'{BASE_URL}/pres/programs')
         programs_df = pd.DataFrame(all_programs.json())
 
-        # Filter to only the logged-in club's programs
         if not programs_df.empty:
             filtered_programs = programs_df[programs_df["ClubName"] == CLUB_NAME]
             st.dataframe(filtered_programs)
@@ -107,15 +105,23 @@ with tab4:
     except:
         st.warning("Could not load programs.")
 
-    st.subheader("Applications for Your Club's Programs")
+    st.subheader("Applications & Applicants")
 
     try:
         all_apps = requests.get(f'{BASE_URL}/pres/program_applications')
         apps_df = pd.DataFrame(all_apps.json())
 
-        # Filter to only the logged-in club's applications
         if not apps_df.empty:
             filtered_apps = apps_df[apps_df["ClubName"] == CLUB_NAME]
+            
+            # Reorder columns to show applicant first
+            display_columns = [
+                "FirstName", "LastName", "Email", "NUID", 
+                "ProgramName", "ApplicationName", 
+                "ApplicationDescription", "Deadline", 
+                "ApplyLink", "PostedDate", "StatusText"
+            ]
+            filtered_apps = filtered_apps[[col for col in display_columns if col in filtered_apps.columns]]
             st.dataframe(filtered_apps)
         else:
             st.info("No applications found.")

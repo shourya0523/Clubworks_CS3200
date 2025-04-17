@@ -332,15 +332,20 @@ def get_program_apps():
             a.Deadline,
             a.ApplyLink,
             a.PostedDate,
-            s.StatusText
+            s.FirstName,
+            s.LastName,
+            s.NUID,
+            s.Email
         FROM 
             Programs p
         JOIN 
             Clubs c ON p.ClubID = c.ClubId
         LEFT JOIN 
             Applications a ON p.ProgramID = a.ProgramId
-        LEFT JOIN 
-            ApplicationStatus s ON a.Status = s.StatusID
+        JOIN 
+            StudentApplication sa ON a.ApplicationID = sa.ApplicationID
+        JOIN 
+            Students s ON sa.NUID = s.NUID
         ORDER BY 
             c.ClubName, p.ProgramName, a.Deadline;
         '''
