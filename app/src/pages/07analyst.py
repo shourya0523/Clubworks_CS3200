@@ -7,7 +7,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-
+# Get user's first name
+if 'first_name' in st.session_state:
+    first_name = st.session_state['first_name']
+else:
+    first_name = "Analyst"  
 
 st.set_page_config(
     page_title="Club Search",
@@ -15,7 +19,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("Welcome to Club Search 🎉")
+st.title(f"Welcome to Club Search {first_name} !")
 st.write("")
 
 st.sidebar.title("Search Clubs 🔎")
