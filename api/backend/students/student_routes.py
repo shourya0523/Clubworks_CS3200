@@ -565,7 +565,7 @@ def apply_to_app():
 @students.route('/applications/<nuid>', methods=['GET'])
 def get_student_applications(nuid):
     query = f'''
-    SELECT 
+    SELECT
         a.ApplicationID,
         a.NAME as application_name,
         a.Description as application_description,
@@ -573,28 +573,108 @@ def get_student_applications(nuid):
         a.ApplyLink,
         c.ClubName as club_name,
         ast.StatusText as status
-    FROM 
+    FROM
         StudentApplication sa
-    JOIN 
+    JOIN
         Applications a ON sa.ApplicationID = a.ApplicationID
-    JOIN 
+    JOIN
         Programs p ON a.ProgramId = p.ProgramID
-    JOIN 
+    JOIN
         Clubs c ON p.ClubID = c.ClubId
-    LEFT JOIN 
+    LEFT JOIN
         ApplicationStatus ast ON a.Status = ast.StatusID
-    WHERE 
+    WHERE
         sa.NUID = {nuid}
-    ORDER BY 
+    ORDER BY
         a.Deadline ASC
     '''
-    
+
     cursor = db.get_db().cursor()
-    cursor.execute(query)
-    
-    applications = cursor.fetchall()
-    
-    response = make_response(jsonify(applications))
-    response.status_code = 200
-    
+    try:
+        cursor.execute(query) 
+        applications = cursor.fetchall()
+        response = make_response(jsonify(applications))
+        response.status_code = 200
+    except Exception as e:
+        current_app.logger.error(f"Error fetching student applications for NUID {nuid}: {e}")
+        response = make_response(jsonify({"status": "error", "message": "Failed to fetch applications"}))
+        response.status_code = 500
+    finally:
+        if cursor:
+            cursor.close()
+
+    return response
+
+@students.route('/all_students/<nuid>', methods=['GET'])
+def get_all_other_students(nuid):
+    """Fetches all students except the logged-in user."""
+    query = '''
+    SELECT
+        NUID,
+        FirstName,
+        LastName,
+        Email -- Consider if email should be exposed here
+    FROM
+        Students
+    WHERE NUID != %s -- Parameterized placeholder
+    ORDER BY
+        LastName, FirstName;
+    '''
+    cursor = db.get_db().cursor()
+    try:
+        cursor.execute(query, (nuid,)) # Pass nuid as parameter tuple
+        students_data = cursor.fetchall()
+        response = make_response(jsonify(students_data))
+        response.status_code = 200
+    except Exception as e:
+        current_app.logger.error(f"Error fetching all students (excluding {nuid}): {e}")
+        response = make_response(jsonify({"status": "error", "message": "Failed to fetch students"}))
+        response.status_code = 500
+    finally:
+        if cursor:
+            cursor.close()
+
+    return response
+
+@students.route('/follow', methods=['POST'])
+def follow_student():
+    """Allows a student to follow another student."""
+    data = request.get_json()
+    follower_nuid = data.get('follower_nuid')
+    followee_nuid = data.get('followee_nuid')
+
+    if not follower_nuid or not followee_nuid:
+        return make_response(jsonify({"status": "error", "message": "Follower and Followee NUIDs are required"}), 400)
+
+    if follower_nuid == followee_nuid:
+         return make_response(jsonify({"status": "error", "message": "Cannot follow yourself"}), 400)
+
+    db_conn = db.get_db()
+    cursor = db_conn.cursor()
+
+    try:
+        check_query = "SELECT * FROM Follows WHERE FollowerID = %s AND FolloweeID = %s"
+        cursor.execute(check_query, (follower_nuid, followee_nuid))
+        existing = cursor.fetchone()
+
+        if existing:
+            response = make_response(jsonify({"status": "info", "message": "Already following this student"}))
+            response.status_code = 200
+            return response
+
+        insert_query = "INSERT INTO Follows (FollowerID, FolloweeID) VALUES (%s, %s)"
+        cursor.execute(insert_query, (follower_nuid, followee_nuid))
+        db_conn.commit()
+
+        response = make_response(jsonify({"status": "success", "message": "Successfully followed student"}))
+        response.status_code = 201
+    except Exception as e:
+        db_conn.rollback()
+        current_app.logger.error(f"Error in /follow route ({follower_nuid} -> {followee_nuid}): {e}")
+        response = make_response(jsonify({"status": "error", "message": "Failed to follow student due to server error"}))
+        response.status_code = 500
+    finally:
+        if cursor:
+            cursor.close()
+
     return response
