@@ -4,6 +4,9 @@ import pandas as pd
 from modules.nav import SideBarLinks
 import plotly.graph_objects as go
 from datetime import datetime
+import os
+from pyvis.network import Network
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="Student Profile",
@@ -176,6 +179,32 @@ if response.status_code == 200:
                             st.write(f"• {following}")
                     else:
                         st.write("You aren't following anyone yet.")
+            
+        st.subheader("🌐 My Campus Network")
+        
+        net_response = re.get(f"{BASE_URL}/s/personal_network/{NUID}")
+        if net_response.status_code == 200:
+            data = net_response.json()
+            nodes = data["nodes"]
+            edges = data["edges"]
+
+            net = Network(height="500px", width="100%", bgcolor="#ffffff", font_color="black")
+            net.force_atlas_2based()
+
+            for node in nodes:
+                color = "#6EC1E4" if node["type"] == "student" else "#F4A261"
+                net.add_node(node["id"], label=node["label"], color=color)
+
+            for edge in edges:
+                net.add_edge(edge["source"], edge["target"], color="#D3D3D3", title="Member")
+
+            html_path = "/tmp/personal_network.html"
+            net.save_graph(html_path)
+            with open(html_path, "r", encoding="utf-8") as f:
+                html_content = f.read()
+            components.html(html_content, height=550)
+        else:
+            st.info("Could not load your campus network.")
     
     with tab4:
         st.subheader("Upcoming Events")
@@ -184,7 +213,6 @@ if response.status_code == 200:
         
         if upcoming_events_response.status_code == 200:
             upcoming_events = upcoming_events_response.json()
-            
             if upcoming_events:
                 for event in upcoming_events:
                     with st.container(border=True):
@@ -200,5 +228,6 @@ if response.status_code == 200:
                 st.info("You don't have any upcoming events.")
         else:
             st.info("Could not load upcoming events.")
+            
 else:
     st.error("Could not load profile data")
