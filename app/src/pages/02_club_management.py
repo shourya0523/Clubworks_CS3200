@@ -127,3 +127,7 @@ with tab4:
             st.info("No applications found.")
     except:
         st.warning("Could not load program applications.")
+from modules.nav import SideBarLinks
+
+# Add at beginning of file
+SideBarLinks('president')

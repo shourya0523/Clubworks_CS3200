@@ -6,7 +6,8 @@ from modules.nav import SideBarLinks
 
 st.set_page_config(layout = 'wide')
 
-SideBarLinks()
+# Add at beginning of file
+SideBarLinks('analyst')
 if 'authenticated' not in st.session_state:
     st.session_state['authenticated'] = False
 

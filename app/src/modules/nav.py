@@ -5,24 +5,24 @@
 import streamlit as st
 
 
-#### ------------------------ General ------------------------
 def HomeNav():
     st.sidebar.page_link("Home.py", label="Home", icon="🏠")
 
+def StudentDisc():
+    st.sidebar.page_link("pages/01_Discover", label="Discover", icon="🧠")
+    
+def StudentProf():
+    st.sidebar.page_link("pages/14_Student_Profile", label="Profile", icon="🧠")
 
-def AboutPageNav():
-    st.sidebar.page_link("pages/30_About.py", label="About", icon="🧠")
-
-#### ------------------------ Examples for Role of pol_strat_advisor ------------------------
-def PolStratAdvHomeNav():
+def ClubMan():
     st.sidebar.page_link(
-        "pages/00_Pol_Strat_Home.py", label="Political Strategist Home", icon="👤"
+        "pages/02_club_management.py", label="Manage Your Club", icon="👤"
     )
 
 
-def WorldBankVizNav():
+def AnalystHome():
     st.sidebar.page_link(
-        "pages/01_World_Bank_Viz.py", label="World Bank Visualization", icon="🏦"
+        "pages/07analystshome.py", label="World Bank Visualization", icon="🏦"
     )
 
 
@@ -54,6 +54,43 @@ def clubmanagement02():
 
 
 # --------------------------------Links Function -----------------------------------------------
+def SideBarLinks(role=None):
+    """Render role-appropriate sidebar navigation links"""
+    st.sidebar.image("assets/logo.png", width=150)
+    
+    # Authentication checks
+    if "authenticated" not in st.session_state or not st.session_state.authenticated:
+        st.switch_page("Home.py")
+    
+    # Role-based navigation
+    if role == "admin":
+        st.sidebar.page_link("pages/admin_dashboard.py", label="Admin Dashboard", icon="🛠️")
+        st.sidebar.page_link("pages/admin/system_health.py", label="System Health", icon="📊")
+        st.sidebar.page_link("pages/admin/issue_tracker.py", label="Issue Tracker", icon="📩")
+    elif role == "student":
+        st.sidebar.page_link("pages/01_Discover.py", label="Discover Clubs", icon="🔍")
+        st.sidebar.page_link("pages/14_Student_Profile.py", label="My Profile", icon="👤")
+    elif role == "president":
+        st.sidebar.page_link("pages/02_club_management.py", label="Club Dashboard", icon="🏛️")
+        st.sidebar.page_link("pages/02.1_create_event.py", label="Create Event", icon="🎉")
+    elif role == "analyst":
+        st.sidebar.page_link("pages/07analysthome.py", label="Analytics Hub", icon="📈")
+        st.sidebar.page_link("pages/07analystengagement.py", label="Engagement", icon="📊")
+
+    # Universal elements
+    if st.sidebar.button("🏠 Return Home"):
+        st.switch_page("Home.py")
+    if st.sidebar.button("🚪 Logout"):
+        st.session_state.clear()
+        st.switch_page("Home.py")
+
+
+def clubmanagement02():
+    st.sidebar.page_link("pages/02_club_management.py", label="Club Management", icon="🖥️")
+    st.sidebar.page_link("pages/02.1_create_event.py", label="Create Event", icon="🏢")
+
+
+# --------------------------------Links Function -----------------------------------------------
 def SideBarLinks(show_home=True):
     """
     This function handles adding links to the sidebar of the app based upon the logged-in user's role, which was put in the streamlit session_state object when logging in.
@@ -75,19 +112,21 @@ def SideBarLinks(show_home=True):
     if st.session_state["authenticated"]:
 
         # Show World Bank Link and Map Demo Link if the user is a political strategy advisor role.
-        if st.session_state["role"] == "pol_strat_advisor":
-            PolStratAdvHomeNav()
-            WorldBankVizNav()
-            MapDemoNav()
+        if st.session_state["role"] == "Club President":
+            clubmanagement02()
+
 
         # If the user role is usaid worker, show the Api Testing page
-        if st.session_state["role"] == "usaid_worker":
+        if st.session_state["role"] == "Analyst":
             PredictionNav()
             ApiTestNav()
             ClassificationNav()
 
         # If the user is an administrator, give them access to the administrator pages
-        if st.session_state["role"] == "administrator":
+        if st.session_state["role"] == "Student":
+            AdminPageNav()
+            
+        if st.session_state["role"] == "Systems Coordinator":
             AdminPageNav()
 
     # Always show the About page at the bottom of the list of links

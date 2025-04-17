@@ -14,7 +14,8 @@ st.set_page_config(
     layout="wide"
 )
 
-SideBarLinks("student")
+# Add at beginning of file
+SideBarLinks('student')
 
 BASE_URL = 'http://api:4000'
 
