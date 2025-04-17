@@ -428,12 +428,13 @@ with tab_rec:
             recommended_clubs = rec_data.get('recommended_clubs', [])
             recommended_events = rec_data.get('recommended_events', [])
 
+            all_recommended_interests = set()
+
             if not recommended_clubs and not recommended_events:
                 st.info("We couldn't find specific recommendations based on your current interests. Try adding more interests to your profile or explore the other tabs!")
 
             if recommended_clubs and student_interest_names:
                 st.subheader("Interest Overlap")
-                all_recommended_interests = set()
                 for club in recommended_clubs:
                     all_recommended_interests.update(club.get('interest_names', []))
 

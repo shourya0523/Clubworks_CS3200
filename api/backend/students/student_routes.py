@@ -571,7 +571,6 @@ def get_recommendations(nuid):
 
     return response
 
-
 @students.route('/recommended_clubs/<nuid>', methods=['GET'])
 def get_recommended_clubs(nuid):
     query = f'''
