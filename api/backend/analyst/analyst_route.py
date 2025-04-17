@@ -100,10 +100,10 @@ def get_active_members():
         COUNT(DISTINCT a.EventID) AS EventsAttended, 
         c.ClubID,
         c.ClubName
-    FROM Membership m
-    JOIN Students s ON m.NUID = s.NUID
+    FROM Attendance a
+    JOIN Students s ON a.NUID = s.NUID
+    JOIN Membership m ON s.NUID = m.NUID
     JOIN Clubs c ON m.ClubID = c.ClubID
-    LEFT JOIN Attendance a ON s.NUID = a.NUID AND a.ClubID = c.ClubID
     GROUP BY s.NUID, s.FirstName, s.LastName, c.ClubID, c.ClubName
     ORDER BY EventsAttended DESC;
     '''
