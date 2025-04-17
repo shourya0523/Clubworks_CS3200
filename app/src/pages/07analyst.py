@@ -80,11 +80,12 @@ if selected_club:
                 st.markdown(f"📅 [Calendar]({club_info['CalendarLink']})")
 
         # Active Members
+        # Active Members
         st.subheader("Active Members 👥")
         all_members = requests.get("http://api:4000/a/active_member").json()
 
-        # Filter members based on the selected club's ID
-        club_members = [m for m in all_members if m.get("ClubName") == selected_club]
+        # Filter members based on the selected club's ID (not name)
+        club_members = [m for m in all_members if m.get("ClubID") == club_id]
 
         if club_members:
             with st.container(height=300):
