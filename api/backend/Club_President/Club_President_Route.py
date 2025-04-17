@@ -8,6 +8,7 @@ from flask import make_response
 from flask import current_app
 from backend.db_connection import db
 from backend.ml_models.model01 import predict
+import pymysql.cursors
 
 club_president = Blueprint('club_president', __name__)
 
@@ -174,3 +175,68 @@ def exec_profile(nuid):
     response.status_code = 200
     return response
 
+@club_president.route('/event/<int:clubid>', methods=['GET'])
+def get_event_by_name(clubid):
+
+    cursor = db.get_db().cursor(pymysql.cursors.DictCursor)
+    query = '''
+        SELECT e.EventID, e.Name, e.Location, e.StartTime, e.EndTime,
+               i.ImageLink AS PosterImgLink, et.EventType
+        FROM   Events e
+        JOIN   EventTypes et ON e.Type = et.EventTypeID
+        JOIN   Images     i  ON e.PosterImg = i.ImageID
+        WHERE  e.ClubId = %s
+        LIMIT  1
+    '''
+    cursor.execute(query, (clubid,))
+    row = cursor.fetchone()
+    if not row:
+        return make_response("Event not found.", 404)
+    return make_response(jsonify(row), 200)
+
+@club_president.route('/edit_event/<int:eventid>', methods=['PUT'])
+def edit_event(eventid):
+    info = request.json
+    name        = info['Name']
+    location    = info['Location']
+    start_time  = info['StartTime']
+    end_time    = info['EndTime']
+    event_type  = info['Type']
+    poster_link = info['PosterImg']
+
+    cursor = db.get_db().cursor()
+
+    # translate event‑type name ► id
+    cursor.execute(
+        "SELECT EventTypeID FROM EventTypes WHERE EventType = %s",
+        (event_type,)
+    )
+    row = cursor.fetchone()
+    if not row:
+        return make_response(f"Event type '{event_type}' not found.", 400)
+    event_type_id = row['EventTypeID']
+
+    # store / update poster image (new row each time for simplicity)
+    cursor.execute("INSERT INTO Images (ImageLink) VALUES (%s)", (poster_link,))
+    new_img_id = cursor.lastrowid
+
+    update_q = '''
+        UPDATE Events
+        SET    Name=%s, Location=%s, StartTime=%s, EndTime=%s,
+               Type=%s, PosterImg=%s
+        WHERE  EventID=%s
+    '''
+    data = (name, location, start_time, end_time, event_type_id, new_img_id, eventid)
+    cursor.execute(update_q, data)
+    db.get_db().commit()
+    return make_response("Event updated successfully!", 200)
+
+@club_president.route('/events/<int:clubid>', methods=['GET'])
+def list_events(clubid):
+    """Return EventID and Name for every event in this club."""
+    cursor = db.get_db().cursor(pymysql.cursors.DictCursor)
+    cursor.execute(
+        "SELECT EventID, Name FROM Events WHERE ClubId = %s ORDER BY StartTime DESC",
+        (clubid,)
+    )
+    return make_response(jsonify(cursor.fetchall()), 200)
