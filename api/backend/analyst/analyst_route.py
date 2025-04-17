@@ -91,16 +91,21 @@ ORDER BY EventsAttended DESC;
 
 @analyst.route('/active_member', methods = ['GET'])
 def get_active_members():
-
     cursor = db.get_db().cursor()
     the_query = '''
-SELECT s.NUID, s.FirstName, s.LastName, COUNT(DISTINCT a.EventID) AS EventsAttended, c.ClubName
-FROM Membership m
-JOIN Students s ON m.NUID = s.NUID
-LEFT JOIN Attendance a ON s.NUID = a.NUID
-JOIN Clubs c 
-GROUP BY s.NUID, s.FirstName, s.LastName, c.ClubName
-ORDER BY EventsAttended;
+    SELECT 
+        s.NUID, 
+        s.FirstName, 
+        s.LastName, 
+        COUNT(DISTINCT a.EventID) AS EventsAttended, 
+        c.ClubID,
+        c.ClubName
+    FROM Attendance a
+    JOIN Students s ON a.NUID = s.NUID
+    JOIN Membership m ON s.NUID = m.NUID
+    JOIN Clubs c ON m.ClubID = c.ClubID
+    GROUP BY s.NUID, s.FirstName, s.LastName, c.ClubID, c.ClubName
+    ORDER BY EventsAttended DESC;
     '''
     cursor.execute(the_query)
     theData = cursor.fetchall()

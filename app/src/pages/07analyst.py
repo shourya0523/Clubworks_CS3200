@@ -47,7 +47,7 @@ if selected_club:
     
     # Get basic club data
     clubs_data = requests.get("http://api:4000/a/get_clubs").json()
-    club_info = next((club for club in clubs_data if club["ClubName"] == selected_club), None)
+    club_info = next((club for club in clubs_data if club["ClubName"] == selected_club))
     
     if club_info:
         club_id = club_info.get("ClubID")
@@ -56,7 +56,7 @@ if selected_club:
         extra_info_list = requests.get("http://api:4000/a/get_clubs_information").json()
         
         # Find the matching club in extra_info by ClubName
-        matching_extra_info = next((info for info in extra_info_list if info.get("ClubName") == selected_club), None)
+        matching_extra_info = next((info for info in extra_info_list if info.get("ClubName") == selected_club))
         
         # Update club_info with matching extra info if found
         if matching_extra_info:
@@ -79,24 +79,41 @@ if selected_club:
             if club_info.get("CalendarLink"):
                 st.markdown(f"📅 [Calendar]({club_info['CalendarLink']})")
 
-        # Active Members
-        st.subheader("Active Members 👥")
-        all_members = requests.get("http://api:4000/a/active_member").json()
+# Active Members
+st.subheader("Active Members 👥")
 
-        # Filter members based on the selected club's ID
-        club_members = [m for m in all_members if m.get("ClubName") == selected_club]
+# Get all active members from backend
+all_members_response = requests.get("http://api:4000/a/active_member")
+all_members = all_members_response.json()
 
-        if club_members:
-            with st.container(height=300):
-                for m in club_members:
-                    name = f"{m.get('FirstName', '')} {m.get('LastName', '')}".strip() or "Unknown"
-                    status = f"Attended {m.get('EventsAttended', 0)} event(s)"
-                    st.write(f"**{name}** - *{status}*")
-                    st.divider()
-        else:
-            st.info("ℹ️ No active members found for this club.")
-
-
+# Make sure we have a club selected
+if selected_club:
+    # Filter members based on selected club's name
+    club_members = [m for m in all_members if m.get("ClubName") == selected_club]
+    
+    # Show how many members we found (for debugging)
+    st.write(f"Found {len(club_members)} active members for {selected_club}")
+    
+    if club_members:
+        with st.container(height=300):
+            for m in club_members:
+                first = m.get('FirstName', '')
+                last = m.get('LastName', '')
+                full_name = f"{first} {last}".strip() or "Unknown"
+                events = m.get('EventsAttended', 0)
+                st.write(f"**{full_name}** - *Attended {events} event(s)*")
+                st.divider()
+    else:
+        # This message should only appear if no members are found after filtering
+        st.info(f"ℹ️ No active members found for {selected_club}.")
+        
+        # Extra debugging in case of issues
+        unique_clubs = set(m.get("ClubName", "") for m in all_members)
+        st.write(f"Debug: Available club names in data: {unique_clubs}")
+        st.write(f"Debug: Selected club: '{selected_club}'")
+        # Check exact match vs case-insensitive
+        st.write(f"Debug: Exact matches: {len([m for m in all_members if m.get('ClubName') == selected_club])}")
+        st.write(f"Debug: Case-insensitive matches: {len([m for m in all_members if m.get('ClubName', '').lower() == selected_club.lower()])}")
         # Funding Requests
         st.subheader("Funding Requests 💰")
         all_requests = requests.get("http://api:4000/a/funding_requests").json()
