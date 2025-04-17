@@ -106,3 +106,11 @@ if st.button('Help',
     st.session_state['role'] = 'coordinator'
     st.session_state['first_name'] = 'Connor'
     st.switch_page('pages/01_Discover.py')
+
+if st.button('Support Request',
+            type = 'primary', 
+            use_container_width=True):
+    st.session_state['authenticated'] = True
+    st.session_state['role'] = 'Student'
+    st.session_state['nuid'] = '123456789'
+    st.switch_page('pages/support_request.py')

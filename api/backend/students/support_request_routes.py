@@ -1,5 +1,5 @@
 @students.route('/get_request_types/<nuid>', methods=['POST'])
-def get_request_types():
+def get_request_types(nuid):
     cursor = db.get_db().cursor()
     query = "SELECT RequestTypeID, RequestType FROM RequestTypes"
     cursor.execute(query)
@@ -13,10 +13,15 @@ def support_request():
     s_request_info = s_request_info.json
     s_request_id = s_request_info['RequestID']
     s_request_description = s_request_info['RequestDescription']
-    s_type = s_request_info['Type']
-    query = 'INSERT INTO SupportRequests (SupportRequestType, SupportRequestDescription) VALUES (%s, %s)'
-    data = (s_request_id, s_request_description, s_type)
+
+    query = '''
+        INSERT INTO SupportRequests (NUID, SupportRequestType, SupportRequestDescription)
+        VALUES (%s, %s, %s)
+    '''
+    data = (nuid, s_type, s_request_description)
+
     cursor = db.get_db().cursor()
-    r = cursor.execute(query, data)
+    cursor.execute(query, data)
     db.get_db().commit()
-    return 'request made!'
+
+    return make_response({'message': 'Request submitted successfully!'}, 200)
