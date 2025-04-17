@@ -93,54 +93,141 @@ with tab1:
             st.info("No clubs found.")
 
 with tab2:
-    st.header("Explore Programs")
-    
-    programs_response = requests.get(f"{BASE_URL}/s/programs")
-    
-    if programs_response.status_code == 200:
-        programs_data = programs_response.json()
-        
-        if programs_data:
-            programs_df = pd.DataFrame(programs_data)
-            
-            filtered_programs = filter_dataframe(programs_df, buttonkey='programs', exclude=['ProgramID', 'ClubID', 'ProgramDescription'])
-            
-            cols = st.columns(2)
-            
-            for i, (_, program) in enumerate(filtered_programs.iterrows()):
-                with cols[i % 2]:
-                    with st.container(border=True):
-                        st.subheader(program['ProgramName'])
-                        
-                        if 'ClubName' in program:
-                            st.caption(f"Offered by: {program['ClubName']}")
-                        
-                        if 'ProgramDescription' in program:
-                            st.write(program['ProgramDescription'][:200] + "..." if len(program['ProgramDescription']) > 200 else program['ProgramDescription'])
-                        
-                        if 'ProgramID' in program:
-                            app_response = requests.get(f"{BASE_URL}/s/program_applications/{program['ProgramID']}")
-                            
-                            if app_response.status_code == 200:
-                                apps = app_response.json()
-                                
-                                if apps and len(apps) > 0:
-                                    st.info(f"{len(apps)} open application(s) available")
-                                    
-                                    for app in apps:
-                                        if 'Deadline' in app:
-                                            deadline = pd.to_datetime(app['Deadline'])
-                                            days_left = (deadline - datetime.datetime.now()).days
-                                            
-                                            if days_left > 0:
-                                                st.write(f"Application deadline: {deadline.strftime('%B %d, %Y')} ({days_left} days left)")
-                        
-                        if 'InfoLink' in program and program['InfoLink']:
-                            st.link_button("Learn More", program['InfoLink'], type="primary", use_container_width=True)
-        else:
-            st.info("No programs found.")
+    st.header("Explore Program Applications")
+    st.write("Browse and filter open applications for club programs and opportunities.")
+
+
+    openapps_response = requests.get(f"{BASE_URL}/s/open_apps")
+    openapps_data = None 
+
+    if openapps_response.status_code == 200:
+        openapps_data = openapps_response.json()
     else:
-        st.error(f"Error fetching programs: {programs_response.status_code}")
+        st.error(f"Error fetching applications: {openapps_response.status_code}")
+
+    def add_app_to_apps(app_name):
+
+        nuid = st.session_state['nuid']
+        response = requests.post(
+            f"{BASE_URL}/s/apply_to_app",
+            json={
+                'nuid': nuid,
+                'application_name': app_name
+            }
+        )
+        if response.status_code == 201:
+            st.success(f"Successfully added '{app_name}' to your applications!")
+            st.rerun()
+        elif response.status_code == 200:
+            st.info(response.json().get('message', f"You have already added '{app_name}'"))
+        else:
+            st.error(f"Error adding application: {response.text}")
+
+    if openapps_data:
+        apps_df = pd.DataFrame(openapps_data)
+
+        if 'Deadline' in apps_df.columns:
+            apps_df['Deadline'] = pd.to_datetime(apps_df['Deadline']) # Ensure it's datetime
+            apps_df['FormattedDeadline'] = apps_df['Deadline'].dt.strftime('%B %d, %Y')
+            apps_df['DaysLeft'] = (apps_df['Deadline'] - datetime.datetime.now()).dt.days
+            apps_df = apps_df[apps_df['DaysLeft'] >= 0]
+
+        filtered_apps = filter_dataframe(
+            apps_df,
+            buttonkey='program_apps',
+            exclude=['ApplicationDescription', 'ApplyLink', 'FormattedDeadline', 'DaysLeft', 'Deadline'] # Exclude columns from filter UI
+        )
+
+        if not filtered_apps.empty:
+            st.subheader("Open Applications")
+            cols = st.columns(3) 
+
+            for i, (_, app) in enumerate(filtered_apps.iterrows()):
+                with cols[i % 3]:
+                    with st.container(border=True):
+                        st.subheader(app.get('NAME', 'N/A'))
+                        st.caption(f"**Club:** {app.get('ClubName', 'N/A')}")
+
+                        days_left = app.get('DaysLeft', -1)
+                        deadline_str = app.get('FormattedDeadline', 'N/A')
+
+                        if days_left >= 0:
+                            if days_left > 10:
+                                st.caption(f"Deadline: {deadline_str} (🟢 {days_left} days left)")
+                            elif days_left > 3:
+                                st.caption(f"Deadline: {deadline_str} (🟠 {days_left} days left)")
+                            else:
+                                st.caption(f"Deadline: {deadline_str} (🔴 {days_left} days left)")
+                        else:
+                             st.caption(f"Deadline: {deadline_str} (Past)")
+
+
+                        if 'ApplicationDescription' in app and app['ApplicationDescription']:
+                            st.write(app['ApplicationDescription'])
+
+                        if 'Status' in app and app['Status']:
+                            st.write(f"Status: {app['Status']}")
+
+                        btn_cols = st.columns(2)
+                        with btn_cols[0]:
+                            if 'ApplyLink' in app and app['ApplyLink']:
+                                st.link_button("Apply Now", app['ApplyLink'], use_container_width=True)
+                        with btn_cols[1]:
+                            st.button("Add to My Apps",
+                                      on_click=add_app_to_apps,
+                                      args=(app['NAME'],), 
+                                      key=f"add_app_{app['NAME']}_{i}",
+                                      use_container_width=True)
+        else:
+            st.info("No open applications match your filter criteria.")
+
+    else:
+        st.info("There are currently no open applications available.")
+
+    st.markdown("---")
+    st.subheader("Your Tracked Applications")
+
+    if 'nuid' in st.session_state:
+        student_apps_response = requests.get(f"{BASE_URL}/s/applications/{st.session_state['nuid']}")
+        if student_apps_response.status_code == 200:
+            student_apps = student_apps_response.json()
+            if student_apps and len(student_apps) > 0:
+                st.write("Here are the applications you are tracking:")
+                for app in student_apps:
+                    with st.expander(f"{app.get('application_name', 'Unknown Application')} ({app.get('club_name', 'Unknown Club')})"):
+                        st.write(f"**Status:** {app.get('status', 'Pending')}")
+                        if 'Deadline' in app:
+                             deadline = pd.to_datetime(app['Deadline'])
+                             st.write(f"**Deadline:** {deadline.strftime('%B %d, %Y')}")
+                        if 'ApplyLink' in app and app['ApplyLink']:
+                             st.link_button("Go to Application", app['ApplyLink'])
+
+            else:
+                st.info("You haven't added any applications to track yet. Use the 'Add to My Apps' button above.")
+        else:
+             st.error(f"Could not fetch your tracked applications (Error: {student_apps_response.status_code})")
+
+    else:
+        st.warning("Log in to see your tracked applications.")
+
+    st.markdown("---")
+    st.markdown("### Tips for a Successful Application")
+    tips_col1, tips_col2 = st.columns(2)
+    with tips_col1:
+        st.markdown("""
+        - Be specific about why you want to join this particular club
+        - Highlight relevant skills and experiences
+        - Show enthusiasm and commitment
+        - Proofread your application before submitting
+        """)
+    with tips_col2:
+        st.markdown("""
+        - Research the club before applying
+        - Be honest about your time commitment
+        - Ask questions if you're unsure about anything
+        - Follow up after submitting your application
+        """)
+
 
 with tab3:
     st.header("Events")
@@ -163,7 +250,7 @@ with tab3:
             
             events_df['DaysUntil'] = (events_df['StartTime'] - datetime.datetime.now()).dt.days
                         
-            filtered_events = filter_dataframe(events_df, buttonkey='events', exclude=['EventID', 'PosterLink', 'EventType', 'Location', 'FormattedStartTime', 'FormattedEndTime', 'StartTime', 'EndTime'])
+            filtered_events = filter_dataframe(events_df, buttonkey='events', exclude=['EventID', 'PosterLink', 'FormattedStartTime', 'FormattedEndTime'])
             
             for _, event in filtered_events.iterrows():
                 with st.container(border=True):

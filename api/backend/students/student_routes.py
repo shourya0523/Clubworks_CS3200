@@ -195,35 +195,48 @@ def get_follows(nuid):
 @students.route('/clubs', methods=['GET'])
 def get_all_clubs():
     query = '''
-    SELECT 
+    SELECT
         c.ClubId,
-        c.ClubName, 
+        c.ClubName,
         c.Description,
         c.LinkTree,
         c.CalendarLink,
         c.Complete,
         i.ImageLink as LogoLink,
-        AVG(f.Rating) AS Rating
-    FROM 
+        AVG(f.Rating) AS Rating,
+        -- Use GROUP_CONCAT to aggregate interest names for each club
+        GROUP_CONCAT(DISTINCT intr.InterestName SEPARATOR ', ') AS Interests
+    FROM
         Clubs c
-    LEFT JOIN 
+    LEFT JOIN
         Images i ON c.LogoImg = i.ImageID
-    LEFT JOIN 
+    LEFT JOIN
         Feedback f ON f.ClubID = c.ClubId
-    GROUP BY 
+    -- Join with AppealsTo to link clubs to interests
+    LEFT JOIN
+        AppealsTo at ON c.ClubId = at.ClubId
+    -- Join with Interests to get the interest names
+    LEFT JOIN
+        Interests intr ON at.InterestID = intr.InterestID
+    GROUP BY
+        -- Group by all non-aggregated columns to ensure one row per club
         c.ClubId, c.ClubName, c.Description, c.LinkTree, c.CalendarLink, c.Complete, i.ImageLink
-    ORDER BY 
+    ORDER BY
         c.ClubName
     '''
-        
+
     cursor = db.get_db().cursor()
     cursor.execute(query)
-    
+
     clubs = cursor.fetchall()
-    
+    for club in clubs:
+        if club['Interests']:
+            club['Interests'] = [interest.strip() for interest in club['Interests'].split(',')]
+        else:
+            club['Interests'] = []
     response = make_response(jsonify(clubs))
     response.status_code = 200
-    
+
     return response
 
 @students.route('/programs', methods=['GET'])

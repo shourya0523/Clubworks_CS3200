@@ -424,17 +424,17 @@ INSERT INTO ApplicationStatus (StatusText) VALUES
 -- Insert test data into Applications table
 -- Adjusted Deadlines and PostedDate to be more current/future
 INSERT INTO Applications (NAME, ProgramId, Description, Deadline, ApplyLink, Status, PostedDate) VALUES
-('Fall Hackathon Application', 1, 'Apply for our fall hackathon', '2024-10-15 23:59:59', 'https://example.com/apply/hackathon', 1, '2024-09-01 10:00:00'), -- ID 1
+('Fall Hackathon Application', 1, 'Apply for our fall hackathon', '2025-10-15 23:59:59', 'https://example.com/apply/hackathon', 1, '2024-09-01 10:00:00'), -- ID 1
 ('Workshop Leader Application', 2, 'Apply to lead a workshop', '2024-09-20 23:59:59', 'https://example.com/apply/workshop', 3, '2024-08-15 11:00:00'), -- ID 2
 ('Startup Funding Application', 3, 'Apply for startup funding', '2025-01-10 23:59:59', 'https://example.com/apply/funding', 1, '2024-11-01 09:00:00'), -- ID 3
 ('Engineering Project Proposal', 4, 'Submit your project proposal', '2024-11-01 23:59:59', 'https://example.com/apply/project', 2, '2024-09-15 14:00:00'), -- ID 4
-('Research Assistant Application', 5, 'Apply to be a research assistant', '2024-09-25 23:59:59', 'https://example.com/apply/research', 2, '2024-08-20 16:00:00'), -- ID 5
+('Research Assistant Application', 5, 'Apply to be a research assistant', '2025-09-25 23:59:59', 'https://example.com/apply/research', 2, '2024-08-20 16:00:00'), -- ID 5
 ('DataViz Challenge Entry', 6, 'Submit your visualization for the challenge', '2024-11-30 23:59:59', 'https://example.com/apply/dataviz', 1, '2024-10-01 10:00:00'), -- ID 6
 ('ML Study Group Sign-up', 7, 'Join the machine learning study group', '2024-09-15 23:59:59', 'https://example.com/apply/mlstudy', 1, '2024-08-25 12:00:00'), -- ID 7
-('Marketing Bootcamp Registration', 8, 'Register for the digital marketing bootcamp', '2024-10-01 23:59:59', 'https://example.com/apply/bootcamp', 1, '2024-09-05 13:00:00'), -- ID 8
+('Marketing Bootcamp Registration', 8, 'Register for the digital marketing bootcamp', '2025-10-01 23:59:59', 'https://example.com/apply/bootcamp', 1, '2024-09-05 13:00:00'), -- ID 8
 ('Physics Seminar Speaker Proposal', 9, 'Propose a topic to present at our seminar series', '2024-12-31 23:59:59', 'https://example.com/apply/physicspeaker', 3, '2024-10-15 15:00:00'), -- ID 9
 ('Portfolio Review Sign-up', 10, 'Sign up to have your portfolio reviewed', '2025-01-15 23:59:59', 'https://example.com/apply/portfolioreview', 1, '2024-12-01 11:00:00'), -- ID 10
-('Economic Debate Team Application', 11, 'Apply to join the debate team', '2024-09-30 23:59:59', 'https://example.com/apply/econdebate', 1, '2024-09-01 17:00:00'); -- ID 11
+('Economic Debate Team Application', 11, 'Apply to join the debate team', '2025-09-30 23:59:59', 'https://example.com/apply/econdebate', 1, '2024-09-01 17:00:00'); -- ID 11
 
 
 -- Insert test data into StudentApplication table
@@ -570,7 +570,6 @@ INSERT INTO Interested (NUID, InterestID) VALUES
 -- Insert test data into Executives table
 INSERT INTO Executives (Position, NUID, ClubID) VALUES
 ('President', '123456789', 1),
--- ('Vice President', '987654321', 1), -- Removed: '987654321' is President of Club 2
 ('President', '987654321', 2),
 ('Treasurer', '456789123', 3),
 ('Secretary', '789123456', 4),
