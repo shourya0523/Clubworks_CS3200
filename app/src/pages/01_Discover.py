@@ -32,6 +32,22 @@ def rsvp_to_event(event_id):
     else:
         st.warning("Please log in to RSVP to events")
 
+def follow_student_action(followee_nuid):
+    if 'nuid' in st.session_state:
+        follower_nuid = st.session_state['nuid']
+        response = requests.post(
+            f"{BASE_URL}/s/follow",
+            json={
+                'follower_nuid': follower_nuid,
+                'followee_nuid': followee_nuid
+            }
+        )
+        if response.status_code == 201:
+            st.success("Successfully followed student=!")
+        elif response.status_code == 400:
+             st.warning(response.json().get('message', "Could not follow student"))
+
+
 st.title("🔍 Discover")
 st.write("Explore clubs, programs, and events at Northeastern")
 
@@ -41,7 +57,7 @@ if 'authenticated' not in st.session_state:
     st.session_state['first_name'] = 'Lucas'
     st.session_state['nuid'] = '123456789'
 
-tab1, tab2, tab3 = st.tabs(["Clubs", "Programs", "Events"])
+tab1, tab2, tab3, tab4 = st.tabs(["Clubs", "Applications", "Events", "Students"]) 
 
 with tab1:
     st.header("Explore Clubs")
@@ -135,7 +151,7 @@ with tab2:
         filtered_apps = filter_dataframe(
             apps_df,
             buttonkey='program_apps',
-            exclude=['ApplicationDescription', 'ApplyLink', 'FormattedDeadline', 'DaysLeft', 'Deadline'] # Exclude columns from filter UI
+            exclude=['ApplicationDescription', 'ApplyLink', 'FormattedDeadline']
         )
 
         if not filtered_apps.empty:
@@ -171,13 +187,16 @@ with tab2:
                         btn_cols = st.columns(2)
                         with btn_cols[0]:
                             if 'ApplyLink' in app and app['ApplyLink']:
-                                st.link_button("Apply Now", app['ApplyLink'], use_container_width=True)
+                                st.link_button("Apply Now", app['ApplyLink'],
+                                               use_container_width=True,
+                                               type="primary")
                         with btn_cols[1]:
                             st.button("Add to My Apps",
                                       on_click=add_app_to_apps,
                                       args=(app['NAME'],), 
                                       key=f"add_app_{app['NAME']}_{i}",
-                                      use_container_width=True)
+                                      use_container_width=True,
+                                      type="primary")
         else:
             st.info("No open applications match your filter criteria.")
 
@@ -229,67 +248,59 @@ with tab2:
         """)
 
 
-with tab3:
-    st.header("Events")
-    
-    events_response = requests.get(f"{BASE_URL}/s/events")
-    
-    if events_response.status_code == 200:
-        events_data = events_response.json()
-        
-        if events_data:
-            events_df = pd.DataFrame(events_data)
-            
-            if 'StartTime' in events_df.columns:
-                events_df['StartTime'] = pd.to_datetime(events_df['StartTime'])
-                events_df['FormattedStartTime'] = events_df['StartTime'].dt.strftime('%B %d, %Y - %I:%M %p')
-            
-            if 'EndTime' in events_df.columns:
-                events_df['EndTime'] = pd.to_datetime(events_df['EndTime'])
-                events_df['FormattedEndTime'] = events_df['EndTime'].dt.strftime('%I:%M %p')
-            
-            events_df['DaysUntil'] = (events_df['StartTime'] - datetime.datetime.now()).dt.days
-                        
-            filtered_events = filter_dataframe(events_df, buttonkey='events', exclude=['EventID', 'PosterLink', 'FormattedStartTime', 'FormattedEndTime'])
-            
-            for _, event in filtered_events.iterrows():
-                with st.container(border=True):
-                    cols = st.columns([3, 7])
+with tab4:
+    st.header("Discover Students")
+    st.write("Find and connect with other students.")
 
-                    with cols[0]:
-                        if 'PosterLink' in event and event['PosterLink']:
-                            st.image(event['PosterLink'], width=200)
-                        else:
-                            if 'ClubName' in event:
-                                st.subheader(event['ClubName'])
-                            st.caption("No event image available")
+    if 'nuid' in st.session_state:
+        current_nuid = st.session_state['nuid']
+        students_response = requests.get(f"{BASE_URL}/s/all_students/{current_nuid}")
+        students_data = None
 
-                    with cols[1]:
-                        st.subheader(event['Name'])
-
-                        if 'PosterLink' in event and event['PosterLink'] and 'ClubName' in event:
-                             st.write(f"**Organized by:** {event['ClubName']}")
-                        elif 'ClubName' not in event:
-                             st.write(f"**Organized by:** Unknown")
-
-
-                        if 'EventType' in event:
-                            st.write(f"**Event Type:** {event['EventType']}")
-
-                        if 'Location' in event:
-                            st.write(f"**Location:** {event['Location']}")
-
-                        if 'FormattedStartTime' in event and 'FormattedEndTime' in event:
-                            st.write(f"**When:** {event['FormattedStartTime']} to {event['FormattedEndTime']}")
-
-                        if 'EventID' in event:
-                            st.button("RSVP to Event",
-                                      key=f"event_{event['EventID']}",
-                                      type="primary",
-                                      on_click=lambda event_id=event['EventID']: rsvp_to_event(event_id))
+        if students_response.status_code == 200:
+            students_data = students_response.json()
         else:
-            st.info("No upcoming events found.")
-    else:
-        st.error(f"Error fetching events: {events_response.status_code}")
-        
+            st.error(f"Error fetching students: {students_response.status_code}")
+
+        if students_data:
+            students_df = pd.DataFrame(students_data)
+
+            filtered_students = filter_dataframe(
+                students_df,
+                buttonkey='students_filter',
+                exclude=['NUID', 'Email']
+            )
+
+            if not filtered_students.empty:
+                st.subheader("Students")
+                cols = st.columns(3) 
+
+                for i, (_, student) in enumerate(filtered_students.iterrows()):
+                    with cols[i % 3]:
+                        with st.container(border=True):
+                            st.subheader(f"{student.get('FirstName', '')} {student.get('LastName', '')}")
+                            if 'Email' in student and student['Email']: 
+                                st.caption(student['Email'])
+                            if 'Major' in student and student['Major']:
+                                st.caption(f"Major: {student['Major']}")
+
+                            followee_nuid = student.get('NUID')
+                            if followee_nuid:
+                                st.button("Follow",
+                                          key=f"follow_{followee_nuid}_{i}",
+                                          on_click=follow_student_action,
+                                          args=(followee_nuid,),
+                                          use_container_width=True,
+                                          type="primary")
+            else:
+                st.info("No students match your filter criteria.")
+
+        else:
+            st.info("Could not load student data.")
+
+        st.markdown("---")
+        st.subheader("Your Network")
+        st.info("Network graph functionality will be added here.")
+
+
     
