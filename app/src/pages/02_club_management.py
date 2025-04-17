@@ -6,6 +6,9 @@ BASE_URL = 'http://api:4000'
 
 st.set_page_config(page_title="Club Management Dashboard", layout="wide")
 
+from modules.nav import SideBarLinks
+SideBarLinks('admin')
+
 
 if 'nuid' in st.session_state:
     nuid = st.session_state['nuid']

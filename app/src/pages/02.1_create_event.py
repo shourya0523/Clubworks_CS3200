@@ -4,6 +4,9 @@ from datetime import datetime
 
 BASE_URL = 'http://api:4000'
 
+from modules.nav import SideBarLinks
+SideBarLinks('admin')
+
 
 st.set_page_config(page_title="Create or Update Events", layout="centered")
 st.title("📅 Manage Events")

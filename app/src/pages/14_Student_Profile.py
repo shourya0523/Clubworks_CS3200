@@ -8,6 +8,7 @@ import os
 from pyvis.network import Network
 import streamlit.components.v1 as components
 
+
 st.set_page_config(
     page_title="Student Profile",
     page_icon="👤",
