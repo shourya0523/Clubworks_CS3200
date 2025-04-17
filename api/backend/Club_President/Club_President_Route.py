@@ -293,3 +293,60 @@ def list_events(clubid):
         (clubid,)
     )
     return make_response(jsonify(cursor.fetchall()), 200)
+
+@club_president.route('/programs', methods=['GET'])
+def get_programs():
+    cursor = db.get_db().cursor()
+    the_query = '''
+    SELECT 
+        p.ProgramID,
+        p.ProgramName,
+        p.ProgramDescription,
+        p.InfoLink,
+        c.ClubName
+    FROM 
+        Programs p
+    JOIN 
+        Clubs c ON p.ClubID = c.ClubId
+    ORDER BY 
+        c.ClubName, p.ProgramName;
+        '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response
+
+@club_president.route('/program_applications', methods=['GET'])
+def get_program_apps():
+    cursor = db.get_db().cursor()
+    the_query = '''
+        SELECT 
+            p.ProgramID,
+            p.ProgramName,
+            c.ClubName,
+            a.ApplicationID,
+            a.NAME AS ApplicationName,
+            a.Description AS ApplicationDescription,
+            a.Deadline,
+            a.ApplyLink,
+            a.PostedDate,
+            s.StatusText
+        FROM 
+            Programs p
+        JOIN 
+            Clubs c ON p.ClubID = c.ClubId
+        LEFT JOIN 
+            Applications a ON p.ProgramID = a.ProgramId
+        LEFT JOIN 
+            ApplicationStatus s ON a.Status = s.StatusID
+        ORDER BY 
+            c.ClubName, p.ProgramName, a.Deadline;
+        '''
+    cursor.execute(the_query)
+    theData = cursor.fetchall()
+    the_response = make_response(theData)
+    the_response.status_code = 200  
+    the_response.mimetype = 'application/json'
+    return the_response
