@@ -9,6 +9,26 @@ st.set_page_config(page_title="Create or Update Events", layout="centered")
 st.title("📅 Manage Events")
 tab_create, tab_edit = st.tabs(["Create Event", "Edit Event"])
 
+if 'nuid' in st.session_state:
+    nuid = st.session_state['nuid']
+    # Make the GET request
+    response = requests.get(f'{BASE_URL}/pres/profile/{nuid}')
+    response.raise_for_status()
+    
+    # Parse the JSON response
+    data = response.json()
+    
+    if data and isinstance(data, list) and len(data) > 0:
+        CLUB_ID = data[0].get("ClubId")
+        CLUB_NAME = data[0].get("ClubName")
+        FIRST_NAME = data[0].get("FirstName")
+        POSITIONS = data[0].get("Positions")
+        
+        # Display the extracted variables
+        st.write("**Extracted Variables:**")
+        st.write("Club ID:", CLUB_ID)
+else:
+    st.switch_page('Home.py')
 
 def fetch_event_types():
     try:
@@ -46,13 +66,13 @@ with tab_create:
                 "Location": location,
                 "StartTime": str(start_time),
                 "EndTime": str(end_time),
-                "ClubID": club_id,
+                "ClubID": CLUB_ID,
                 "Type": event_type,
                 "PosterImg": poster_img
             }
 
             try:
-                response = requests.put(f"{BASE_URL}/pres/create_event", json=payload)
+                response = requests.post(f"{BASE_URL}/pres/create_event", json=payload)
                 if response.status_code == 200:
                     st.success("✅ Event created successfully!")
                 else:

@@ -35,9 +35,9 @@ def get_attendancecount(clubid):
     the_response.mimetype = 'application/json'
     return the_response
 
-@club_president.route('/create_event', methods=['PUT'])
+@club_president.route('/create_event', methods=['POST'])
 def create_club_event():
-    current_app.logger.info('PUT /club_president route')
+    current_app.logger.info('POST /club_president route')
     event_info = request.json
     name = event_info['Name']
     location = event_info['Location']
