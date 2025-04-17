@@ -5,8 +5,7 @@ import requests
 import datetime
 from modules.filterframe import filter_dataframe
 import streamlit.components.v1 as components
-import matplotlib.pyplot as plt
-from matplotlib_venn import venn2, venn2_circles
+import plotly.graph_objects as go
 
 BASE_URL = "http://api:4000"
 
@@ -324,7 +323,7 @@ with tab3:
                                                 exclude=['EventID',
                                                          'PosterLink',
                                                          'FormattedStartTime'
-                                                         , 'FormattedEndTime'])
+                                                         ,'FormattedEndTime'])
             
              for _, event in filtered_events.iterrows():
                  with st.container(border=True):
@@ -345,7 +344,6 @@ with tab3:
                               st.write(f"**Organized by:** {event['ClubName']}")
                          elif 'ClubName' not in event:
                               st.write(f"**Organized by:** Unknown")
- 
  
                          if 'EventType' in event:
                              st.write(f"**Event Type:** {event['EventType']}")
@@ -439,32 +437,38 @@ with tab_rec:
                 for club in recommended_clubs:
                     all_recommended_interests.update(club.get('interest_names', []))
 
-                relevant_recommended_interests = all_recommended_interests.intersection(student_interest_names)
+                interests_sorted = sorted(student_interest_names)
+                clubs_sorted = [club.get('ClubName', 'N/A') for club in recommended_clubs]
+                matrix = []
+                for interest in interests_sorted:
+                    row = []
+                    for club in recommended_clubs:
+                        club_interests = set(club.get('interest_names', []))
+                        row.append(1 if interest in club_interests else 0)
+                    matrix.append(row)
 
-                if len(student_interest_names) > 0 and len(relevant_recommended_interests) > 0 :
-                    try:
-                        fig, ax = plt.subplots()
-                        v = venn2(
-                            subsets=(student_interest_names, relevant_recommended_interests),
-                            set_labels=('Your Interests', 'Recommended Club Interests'),
-                            set_colors=('skyblue', 'lightgreen'),
-                            alpha=0.7,
-                            ax=ax
-                        )
-                        
-                        plt.title("Overlap: Your Interests vs. Recommended Clubs' Interests")
-                        st.pyplot(fig)
+                fig = go.Figure(data=go.Heatmap(
+                    z=matrix,
+                    x=clubs_sorted,
+                    y=interests_sorted,
+                    colorscale='Reds',
+                    showscale=False,
+                    hovertemplate='Interest: %{y}<br>Club: %{x}<br>Shared: %{z}<extra></extra>'
+                ))
+                fig.update_layout(
+                    title="Your Interests vs. Recommended Clubs",
+                    xaxis_title="Recommended Club",
+                    yaxis_title="Your Interest",
+                    height=300 + 30*len(interests_sorted)
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
-                        shared_interests = student_interest_names.intersection(relevant_recommended_interests)
-                        if shared_interests:
-                             st.write("Interests shared with recommended clubs:")
-                             st.write(f"`{', '.join(shared_interests)}`")
-
-                    except Exception as plot_err:
-                         st.warning(f"Could not generate interest overlap visualization: {plot_err}")
-                else:
-                    st.caption("Not enough data to show interest overlap visualization.")
-                st.divider() 
+                shared_interests = student_interest_names.intersection(all_recommended_interests)
+                if shared_interests:
+                    st.write("Interests shared with recommended clubs:")
+                    st.write(f"`{', '.join(shared_interests)}`")
+                st.divider()
+            relevant_recommended_interests = all_recommended_interests.intersection(student_interest_names)
 
 
             if recommended_clubs:
