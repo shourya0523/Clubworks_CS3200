@@ -95,15 +95,16 @@ with tab_edit:
         if not events:
             st.info("ℹ️ No events found for this club.")
         else:
-            event_names = [e["Name"] for e in events]
-            sel_name = st.selectbox("Select an event to edit", event_names)
+            # build name ➜ id mapping
+            name_to_id = {e["Name"]: e["EventID"] for e in events}
 
-            # single button to load the selected event
+            sel_name = st.selectbox("Select an event to edit", list(name_to_id.keys()))
+
             if st.button("Load Event"):
+                sel_id = name_to_id[sel_name]                 # the chosen EventID
                 res = requests.get(
-                    f"{BASE_URL}/pres/event/{CLUB_ID}",
+                    f"{BASE_URL}/pres/loadevent/{sel_id}",
                 )
-
                 # ── handle server response ───────────────────────────
                 if res.status_code != 200:
                     st.error(f"❌ {res.text}")

@@ -194,6 +194,29 @@ def get_event_by_name(clubid):
         return make_response("Event not found.", 404)
     return make_response(jsonify(row), 200)
 
+
+@club_president.route('/loadevent/<int:eventid>', methods=['GET'])
+def load_event(eventid):
+    """
+    Return full details for one event, addressed solely by its primary‑key EventID.
+    """
+    cursor = db.get_db().cursor(pymysql.cursors.DictCursor)
+    cursor.execute(
+        '''
+        SELECT e.EventID, e.Name, e.Location, e.StartTime, e.EndTime,
+               i.ImageLink AS PosterImgLink, et.EventType
+        FROM   Events e
+        JOIN   Images     i  ON e.PosterImg = i.ImageID
+        JOIN   EventTypes et ON e.Type      = et.EventTypeID
+        WHERE  e.EventID = %s
+        ''',
+        (eventid,)
+    )
+    row = cursor.fetchone()
+    if not row:
+        return make_response("Event not found.", 404)
+    return make_response(jsonify(row), 200)
+
 @club_president.route('/edit_event/<int:eventid>', methods=['PUT'])
 def edit_event(eventid):
     info = request.json
@@ -206,7 +229,6 @@ def edit_event(eventid):
 
     cursor = db.get_db().cursor()
 
-    # translate event‑type name ► id
     cursor.execute(
         "SELECT EventTypeID FROM EventTypes WHERE EventType = %s",
         (event_type,)
