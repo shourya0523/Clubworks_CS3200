@@ -87,7 +87,6 @@ def get_member_contact():
 def make_request():
     current_app.logger.info('PUT /club_president route')
     request_info = request.json
-    request_id = request_info['RequestID']
     request_description = request_info['RequestDescription']
     status = request_info['Status']
     created_time = request_info['CreatedTime']
@@ -158,4 +157,27 @@ def get_request_types():
     cursor.execute(query)
     rows = cursor.fetchall()
     types = [{"RequestTypeID": row["RequestTypeID"], "RequestType": row["RequestType"]} for row in rows]
+    return make_response(types, 200)
+
+@club_president.route('/make_support_request', methods=['PUT'])
+def make_support_request():
+    current_app.logger.info('PUT /club_president route')
+    s_request_info = s_request_info.json
+    s_request_id = s_request_info['RequestID']
+    s_request_description = s_request_info['RequestDescription']
+    s_type = s_request_info['Type']
+    query = 'INSERT INTO SupportRequests (SupportRequestType, SupportRequestDescription) VALUES (%s, %s)'
+    data = (s_request_id, s_request_description, s_type)
+    cursor = db.get_db().cursor()
+    r = cursor.execute(query, data)
+    db.get_db().commit()
+    return 'request made!'
+
+@club_president.route('/support_request_types', methods=['GET'])
+def get_s_request_types():
+    cursor = db.get_db().cursor()
+    query = "SELECT SupportTypeID, SupportType FROM SupportTypes" 
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    types = [{"SupportTypeID": row["SupportTypeID"], "SupportType": row["SupportType"]} for row in rows]
     return make_response(types, 200)
