@@ -194,7 +194,6 @@ def get_event_by_name(clubid):
         return make_response("Event not found.", 404)
     return make_response(jsonify(row), 200)
 
-
 @club_president.route('/loadevent/<int:eventid>', methods=['GET'])
 def load_event(eventid):
     """
