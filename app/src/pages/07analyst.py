@@ -19,7 +19,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title(f"Welcome to Club Search {first_name} !")
+st.title(f"Welcome to Club Search!")
 st.write("")
 
 st.sidebar.title("Search Clubs 🔎")
@@ -123,23 +123,24 @@ if selected_club:
 st.subheader("Engagement Information 📈")
 metrics_tab, retention_tab, major_tab, comparison_tab = st.tabs(["Performance Metrics", "Retention Rate", "Engagement by Major", "Club Comparison"])
 
+# Tab: Performance Metrics
 with metrics_tab:
-    # Fetch performance data
     performance = requests.get("http://api:4000/a/performance_metrics").json()
-
-    # Get metrics for the selected club
-    metrics = next((p for p in performance if p.get("ClubName") == selected_club), None)
+    metrics = None
+    for p in performance:
+        if p.get("ClubName") == selected_club:
+            metrics = p
+            break
 
     if metrics:
-        # Display total attendance, average rating, and funding requests
         col1, col2, col3 = st.columns(3)
         col1.metric("Total Attendance", metrics.get("TotalAttendance", 0))
         col2.metric("Average Rating", f"{float(metrics.get('AvgRating', 0)):.1f}/5.0")
         col3.metric("Funding Requests", metrics.get("FundingRequests", 0))
 
-        # Display feedback description (if exists)
         feedback_str = metrics.get("FeedbackDescription", "")
-        feedback_list = [fb.strip() for fb in feedback_str.split(",") if fb.strip()]
+        feedback_list = feedback_str.split(",")
+        feedback_list = [fb.strip() for fb in feedback_list if fb.strip()]
 
         if feedback_list:
             st.write("### Member Feedback")
@@ -148,11 +149,11 @@ with metrics_tab:
         else:
             st.info("ℹ️ No feedback available for this club.")
 
-        # Fetch event performance data
         events_data = requests.get("http://api:4000/a/get_performance").json()
-
-        # Filter events for the selected club
-        events = [e for e in events_data if e.get("ClubName") == selected_club]
+        events = []
+        for e in events_data:
+            if e.get("ClubName") == selected_club:
+                events.append(e)
 
         if events:
             st.write("### Attendance by Event Type and Interest")
@@ -162,6 +163,7 @@ with metrics_tab:
                     etype = e.get("EventType", "Unknown")
                     interest = e.get("InterestName", "General")
                     count = e.get("TotalAttendance", 0)
+
                     if etype not in event_map:
                         event_map[etype] = []
                     event_map[etype].append((interest, count))
@@ -176,73 +178,94 @@ with metrics_tab:
     else:
         st.info("ℹ️ No performance metrics found for this club.")
 
-        with retention_tab:
-            retention = requests.get("http://api:4000/a/retention").json()
-            data = next((r for r in retention if r.get("ClubName") == selected_club), None)
+# Tab: Retention Rate
+with retention_tab:
+    retention = requests.get("http://api:4000/a/retention").json()
+    data = None
+    for r in retention:
+        if r.get("ClubName") == selected_club:
+            data = r
+            break
 
-            if data:
-                total = data.get("TotalMembers", 0)
-                active = data.get("ActiveParticipants", 0)
-                rate = float(data.get("RetentionRate", 0))
-                cols = st.columns(3)
-                cols[0].metric("Total Members", total)
-                cols[1].metric("Active Participants", active)
-                cols[2].metric("Retention Rate", f"{rate:.1f}%")
-                st.progress(active / total if total > 0 else 0)
-                st.caption(f"Active members: {rate:.1f}% of total membership")
-            else:
-                st.info("ℹ️ No retention data available.")
+    if data:
+        total = data.get("TotalMembers", 0)
+        active = data.get("ActiveParticipants", 0)
+        rate = float(data.get("RetentionRate", 0))
+        cols = st.columns(3)
+        cols[0].metric("Total Members", total)
+        cols[1].metric("Active Participants", active)
+        cols[2].metric("Retention Rate", f"{rate:.1f}%")
+        st.progress(active / total if total > 0 else 0)
+        st.caption(f"Active members: {rate:.1f}% of total membership")
+    else:
+        st.info("ℹ️ No retention data available.")
 
-        with major_tab:
-            engagement = requests.get("http://api:4000/a/engagement_major").json()
-            club_engagement = [e for e in engagement if e.get("ClubName") == selected_club]
+# Tab: Engagement by Major
+with major_tab:
+    engagement = requests.get("http://api:4000/a/engagement_major").json()
+    club_engagement = []
+    for e in engagement:
+        if e.get("ClubName") == selected_club:
+            club_engagement.append(e)
 
-            if club_engagement:
-                st.write("### Engagement by Major")
-                with st.container(height=250):
-                    sorted_engagement = sorted(club_engagement, key=lambda x: int(x.get("EventAttendance", 0)), reverse=True)
-                    for e in sorted_engagement:
-                        st.write(f"**{e['Major']}** — Event Attendance: {e['EventAttendance']}")
-                        st.divider()
+    if club_engagement:
+        st.write("### Engagement by Major")
+        with st.container(height=250):
+            sorted_engagement = sorted(club_engagement, key=lambda x: int(x.get("EventAttendance", 0)), reverse=True)
+            for e in sorted_engagement:
+                st.write(f"**{e['Major']}** — Event Attendance: {e['EventAttendance']}")
+                st.divider()
 
-                attendance_data = requests.get("http://api:4000/a/attendance_major").json()
+        attendance_data = requests.get("http://api:4000/a/attendance_major").json()
+        majors = {}
+        for item in attendance_data:
+            major = item["Major"]
+            if major not in majors:
+                majors[major] = 0
+            majors[major] += item.get("AttendanceCount", 0)
 
-                majors = {}
-                for item in attendance_data:
-                    major = item["Major"]
-                    majors[major] = majors.get(major, 0) + item.get("AttendanceCount", 0)
+        major_items = []
+        for m in majors:
+            major_items.append((m, majors[m]))
 
-                major_items = sorted(majors.items(), key=lambda x: x[1], reverse=True)
-                st.write("### Top Majors Across All Events")
-                for i in range(min(3, len(major_items))):
-                    m, c = major_items[i]
-                    st.write(f"{i + 1}. **{m}**: {c} total attendances")
-            else:
-                st.info("ℹ️ No engagement by major data available.")
+        major_items.sort(key=lambda x: x[1], reverse=True)
 
+        st.write("### Top Majors Across All Events")
+        for i in range(min(3, len(major_items))):
+            m, c = major_items[i]
+            st.write(f"{i + 1}. **{m}**: {c} total attendances")
+    else:
+        st.info("ℹ️ No engagement by major data available.")
 
+# Tab: Club Comparison
+with comparison_tab:
+    all_metrics = requests.get("http://api:4000/a/performance_metrics").json()
 
+    for m in all_metrics:
+        attendance = m.get("TotalAttendance", 0)
+        funding = m.get("FundingRequests", 0)
+        m["EngagementScore"] = attendance + funding
 
-        with comparison_tab:
-            all_metrics = requests.get("http://api:4000/a/performance_metrics").json()
+    df = pd.DataFrame(all_metrics)
+    df = df.sort_values(by="EngagementScore", ascending=False)
 
-            for m in all_metrics:
-                m["EngagementScore"] = m.get("TotalAttendance", 0) + m.get("FundingRequests", 0)
+    # Build color list without lambda
+    colors = []
+    for club in df["ClubName"]:
+        if club == selected_club:
+            colors.append("orange")
+        else:
+            colors.append("skyblue")
 
-            df = pd.DataFrame(all_metrics)
-            df = df.sort_values(by="EngagementScore", ascending=False)
-
-            colors = ["orange" if club == selected_club else "skyblue" for club in df["ClubName"]]
-
-            fig, ax = plt.subplots(figsize=(8, 12))
-            sns.barplot(
-                data=df,
-                y="ClubName",
-                x="EngagementScore",
-                palette=colors,
-                ax=ax
-            )
-            ax.set_xlabel("Engagement Score")
-            ax.set_ylabel("Club Name")
-            ax.set_title(f"Engagement Score: {selected_club} vs All Clubs 🔥")
-            st.pyplot(fig)
+    fig, ax = plt.subplots(figsize=(8, 12))
+    sns.barplot(
+        data=df,
+        y="ClubName",
+        x="EngagementScore",
+        palette=colors,
+        ax=ax
+    )
+    ax.set_xlabel("Engagement Score")
+    ax.set_ylabel("Club Name")
+    ax.set_title(f"Engagement Score: {selected_club} vs All Clubs 🔥")
+    st.pyplot(fig)

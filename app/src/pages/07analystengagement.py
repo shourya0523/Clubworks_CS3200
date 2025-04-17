@@ -11,16 +11,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Optional CSS injection to help remove extra top margin in the right column.
-st.markdown("""
-    <style>
-    /* Remove top margin for columns if needed */
-    [data-testid="stHorizontalBlock"] {
-        margin-top: 0rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 # Create two columns: left for the engagement chart, right for the Inbox
 left_column, right_column = st.columns([2, 1])
 
