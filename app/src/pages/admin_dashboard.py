@@ -77,49 +77,6 @@ if page == "System Health Dashboard":
     except Exception:
         st.error("Error fetching most attended events.")
 
-# API HEALTH PAGE
-elif page == "API Health":
-    st.switch_page('pages/12_API_Test.py')
-
-# ISSUE TRACKER PAGE
-elif page == "Issue Tracker":
-    st.title("🛠️ Issue Tracker")
-    st.caption(f"Data last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
-    st.markdown("### 👤 Students with Incomplete Profiles")
-    try:
-        profiles_response = requests.get(f"{BASE_URL}/studentsincomplete")
-        if profiles_response.status_code == 200:
-            incomplete_profiles = profiles_response.json()
-            if isinstance(incomplete_profiles, dict):
-                incomplete_profiles = [incomplete_profiles]
-            if incomplete_profiles:
-                df_profiles = pd.DataFrame(incomplete_profiles)
-                st.dataframe(df_profiles)
-            else:
-                st.write("No students with incomplete profiles.")
-        else:
-            st.error(f"Failed to fetch incomplete profiles: {profiles_response.status_code}")
-    except Exception:
-        st.error("Error fetching incomplete profiles.")
-
-    st.markdown("### 📋 Students with Incomplete Registrations (Last 7 Days)")
-    try:
-        registrations_response = requests.get(f"{BASE_URL}/incompleteregistrations")
-        if registrations_response.status_code == 200:
-            incomplete_registrations = registrations_response.json()
-            if isinstance(incomplete_registrations, dict):
-                incomplete_registrations = [incomplete_registrations]
-            if incomplete_registrations:
-                df_registrations = pd.DataFrame(incomplete_registrations)
-                st.dataframe(df_registrations)
-            else:
-                st.write("No incomplete registrations in the last 7 days.")
-        else:
-            st.error(f"Failed to fetch incomplete registrations: {registrations_response.status_code}")
-    except Exception:
-        st.error("Error fetching incomplete registrations.")
-
     st.markdown("### 📩 Support Requests")
     try:
         support_response = requests.get(f"{BASE_URL}/supportrequests")
@@ -168,38 +125,129 @@ elif page == "Issue Tracker":
         st.error(f"Error fetching or rendering chart: {e}")
 
 
-st.markdown("### 🌐 Student–Club Engagement Network")
+    st.markdown("### 🌐 Student–Club Engagement Network")
 
-try:
-    response = requests.get(f"{BASE_URL}/engagementnetwork")
-    if response.status_code == 200:
-        data = response.json()
-        nodes = data["nodes"]
-        edges = data["edges"]
+    try:
+        response = requests.get(f"{BASE_URL}/engagementnetwork")
+        if response.status_code == 200:
+            data = response.json()
+            nodes = data["nodes"]
+            edges = data["edges"]
 
-        net = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
-        net.force_atlas_2based()
+            net = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
+            net.force_atlas_2based()
 
-        # Add nodes
-        for node in nodes:
-            color = "#87CEEB" if "(" in node else "#FF7F50"  # Students = blue, Clubs = orange
-            net.add_node(node, label=node, color=color)
+            # Add nodes
+            for node in nodes:
+                color = "#87CEEB" if "(" in node else "#FF7F50"  # Students = blue, Clubs = orange
+                net.add_node(node, label=node, color=color)
 
-        # Add edges with role-based color
-        for edge in edges:
-            edge_color = "#DC143C" if edge["type"] == "executive" else "#D3D3D3"  # Red for execs, gray for members
-            edge_label = "Executive" if edge["type"] == "executive" else "Member"
-            net.add_edge(edge["source"], edge["target"], color=edge_color, title=edge_label)
+            # Add edges with role-based color
+            for edge in edges:
+                edge_color = "#DC143C" if edge["type"] == "executive" else "#D3D3D3"  # Red for execs, gray for members
+                edge_label = "Executive" if edge["type"] == "executive" else "Member"
+                net.add_edge(edge["source"], edge["target"], color=edge_color, title=edge_label)
 
-        # Save to /tmp for Docker safety
-        html_path = "/tmp/engagement_network.html"
-        net.save_graph(html_path)
+            # Save to /tmp for Docker safety
+            html_path = "/tmp/engagement_network.html"
+            net.save_graph(html_path)
 
-        with open(html_path, "r", encoding="utf-8") as f:
-            html_content = f.read()
+            with open(html_path, "r", encoding="utf-8") as f:
+                html_content = f.read()
 
-        components.html(html_content, height=650)
-    else:
-        st.error(f"Failed to fetch engagement data: {response.status_code}")
-except Exception as e:
-    st.error(f"Error rendering engagement graph: {e}")
+            components.html(html_content, height=650)
+        else:
+            st.error(f"Failed to fetch engagement data: {response.status_code}")
+    except Exception as e:
+        st.error(f"Error rendering engagement graph: {e}")
+
+# API HEALTH PAGE
+elif page == "API Health":
+    st.switch_page('pages/12_API_Test.py')
+
+# ISSUE TRACKER PAGE
+elif page == "Issue Tracker":
+    st.title("🛠️ Issue Tracker")
+    st.caption(f"Data last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    st.markdown("### 👤 Students with Incomplete Profiles")
+    try:
+        profiles_response = requests.get(f"{BASE_URL}/studentsincomplete")
+        if profiles_response.status_code == 200:
+            incomplete_profiles = profiles_response.json()
+            if isinstance(incomplete_profiles, dict):
+                incomplete_profiles = [incomplete_profiles]
+            if incomplete_profiles:
+                df_profiles = pd.DataFrame(incomplete_profiles)
+                st.dataframe(df_profiles)
+            else:
+                st.write("No students with incomplete profiles.")
+        else:
+            st.error(f"Failed to fetch incomplete profiles: {profiles_response.status_code}")
+    except Exception:
+        st.error("Error fetching incomplete profiles.")
+
+    st.markdown("### 📋 Clubs with Incomplete Registrations (Last 7 Days)")
+    try:
+        registrations_response = requests.get(f"{BASE_URL}/incompleteregistrations")
+        if registrations_response.status_code == 200:
+            incomplete_registrations = registrations_response.json()
+            if isinstance(incomplete_registrations, dict):
+                incomplete_registrations = [incomplete_registrations]
+            if incomplete_registrations:
+                df_registrations = pd.DataFrame(incomplete_registrations)
+                st.dataframe(df_registrations)
+            else:
+                st.write("No incomplete registrations in the last 7 days.")
+        else:
+            st.error(f"Failed to fetch incomplete registrations: {registrations_response.status_code}")
+    except Exception:
+        st.error("Error fetching incomplete registrations.")
+
+    st.markdown("### 📩 Support Requests")
+    try:
+        support_response = requests.get(f"{BASE_URL}/supportrequests")
+        if support_response.status_code == 200:
+            support_requests = support_response.json()
+            if isinstance(support_requests, dict):
+                support_requests = [support_requests]
+            if support_requests:
+                df_support = pd.DataFrame(support_requests)
+                st.dataframe(df_support)
+            else:
+                st.write("No active support requests.")
+        else:
+            st.error(f"Failed to fetch support requests: {support_response.status_code}")
+    except Exception:
+        st.error("Error fetching support requests.")
+
+    st.markdown("### 🛠️ Support Request Distribution by Type")
+
+    try:
+        support_response = requests.get(f"{BASE_URL}/supportrequests")
+        if support_response.status_code == 200:
+            support_requests = support_response.json()
+            if isinstance(support_requests, dict):
+                support_requests = [support_requests]
+            if support_requests:
+                df_support = pd.DataFrame(support_requests)
+
+                # Group by Support Type
+                type_counts = df_support["SupportType"].value_counts().reset_index()
+                type_counts.columns = ["Support Type", "Requests"]
+
+                # Create pie chart
+                fig = px.pie(
+                    type_counts,
+                    names="Support Type",
+                    values="Requests",
+                    hole=0.3  # Optional: makes it a donut chart
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No support requests to show.")
+        else:
+            st.error(f"Failed to fetch support requests: {support_response.status_code}")
+    except Exception as e:
+        st.error(f"Error rendering support request pie chart: {e}")

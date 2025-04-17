@@ -178,7 +178,7 @@ def students_with_incomplete_profiles():
 
     cursor = db.get_db().cursor()
     the_query = '''
-    SELECT NUID, FirstName, Email
+    SELECT NUID, FirstName, Email, JoinDate
     FROM Students
     WHERE Complete = FALSE
     ORDER BY JoinDate DESC;
@@ -194,14 +194,14 @@ def students_with_incomplete_profiles():
         return {'Status':'No Student Profiles are incomplete'}
     return the_response
 
-@admin.route('/incompleteregistrations', methods = ['GET'])
-def students_with_incomplete_registrations():
-
+@admin.route('/incompleteregistrations', methods=['GET'])
+def clubs_with_incomplete_registrations():
     cursor = db.get_db().cursor()
     the_query = '''
-    SELECT NUID, FirstName, Email, JoinDate
-    FROM Students
-    WHERE Complete = FALSE AND JoinDate >= NOW() - INTERVAL 7 DAY;
+    SELECT ClubName, Description, LinkTree, CalendarLink
+    FROM Clubs
+    WHERE Complete = FALSE
+    ORDER BY ClubName;
     '''
     cursor.execute(the_query)
     theData = cursor.fetchall()
@@ -211,7 +211,7 @@ def students_with_incomplete_registrations():
         the_response.mimetype = 'application/json'
         return the_response
     else:
-        return {'Status':'No Student Registrations are incomplete'}
+        return {'Status': 'No Club Registrations are incomplete'}
 
 @admin.route('/eventandmembers', methods = ['GET'])
 def event_and_member_count():
