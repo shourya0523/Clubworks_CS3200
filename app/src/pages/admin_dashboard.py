@@ -7,7 +7,19 @@ from pyvis.network import Network
 import streamlit.components.v1 as components
 import os
 
+
 st.set_page_config(layout='wide')
+
+if 'role' in st.session_state:
+    if st.session_state['role'] == 'coordinator' :
+        NAME = st.session_state['first_name']
+    else:
+        st.switch_page('Home.py')
+else:
+    st.switch_page('Home.py')
+
+st.title(f"Act as {NAME}, the Systems Coordinator")
+
 
 BASE_URL = "http://api:4000/ad"
 
@@ -16,86 +28,65 @@ page = st.sidebar.radio("Go to...", ["System Health Dashboard", "API Health", "I
 
 # SYSTEM HEALTH DASHBOARD PAGE
 if page == "System Health Dashboard":
-    st.title("Welcome to the Admin Dashboard, Connor!")
-    st.subheader("System Health Dashboard 🩺 ")
-    st.caption(f"Data last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    st.title("📊 System Health Dashboard")
+    st.caption(f"Last refreshed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    st.markdown("---")
+
+    # 🧠 Section 1: Key Metrics
+    st.subheader("📌 Platform Summary Metrics")
+    col1, col2, col3, col4 = st.columns(4)
 
     try:
         students_response = requests.get(f"{BASE_URL}/totalstudents")
-        if students_response.status_code == 200:
-            total_students = students_response.json()[0]["TotalStudents"]
-        else:
-            st.error(f"Failed to fetch total students: {students_response.status_code}")
+        total_students = students_response.json()[0]["TotalStudents"] if students_response.status_code == 200 else "N/A"
     except Exception:
-        st.error("Error fetching total students.")
+        total_students = "N/A"
 
     try:
         clubs_response = requests.get(f"{BASE_URL}/totalclubs")
-        if clubs_response.status_code == 200:
-            total_clubs = clubs_response.json()[0]["TotalClubs"]
-        else:
-            st.error(f"Failed to fetch total clubs: {clubs_response.status_code}")
+        total_clubs = clubs_response.json()[0]["TotalClubs"] if clubs_response.status_code == 200 else "N/A"
     except Exception:
-        st.error("Error fetching total clubs.")
+        total_clubs = "N/A"
 
     try:
         events_response = requests.get(f"{BASE_URL}/totalevents")
-        if events_response.status_code == 200:
-            total_events = events_response.json()[0]["TotalEvents"]
-        else:
-            st.error(f"Failed to fetch total events: {events_response.status_code}")
+        total_events = events_response.json()[0]["TotalEvents"] if events_response.status_code == 200 else "N/A"
     except Exception:
-        st.error("Error fetching total events.")
+        total_events = "N/A"
 
     try:
         past_month_response = requests.get(f"{BASE_URL}/pastmonth")
-        if past_month_response.status_code == 200:
-            events_past_month = past_month_response.json()[0]["RecentEvents"]
-        else:
-            st.error(f"Failed to fetch events past month: {past_month_response.status_code}")
+        events_past_month = past_month_response.json()[0]["RecentEvents"] if past_month_response.status_code == 200 else "N/A"
     except Exception:
-        st.error("Error fetching events past month.")
+        events_past_month = "N/A"
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric(label="Total Students", value=total_students)
-    col2.metric(label="Total Clubs", value=total_clubs)
-    col3.metric(label="Total Events", value=total_events)
-    col4.metric(label="Events This Month", value=events_past_month)
+    col1.metric("👥 Total Students", total_students)
+    col2.metric("📚 Total Clubs", total_clubs)
+    col3.metric("📅 Total Events", total_events)
+    col4.metric("🗓️ Events This Month", events_past_month)
 
-    st.markdown("### 🏆 Top 5 Most Attended Events")
+    st.markdown("---")
+
+    # 🏆 Section 2: Top Event Engagement
+    st.subheader("🏆 Most Attended Events")
     try:
         most_attended_response = requests.get(f"{BASE_URL}/mostattended")
         if most_attended_response.status_code == 200:
             most_attended = most_attended_response.json()
             if most_attended:
                 for idx, event in enumerate(most_attended, start=1):
-                    st.write(f"{idx}. **{event['EventName']}** — {event['AttendanceCount']} attendees")
+                    st.markdown(f"**{idx}. {event['EventName']}** — {event['AttendanceCount']} attendees")
             else:
-                st.write("No data available for most attended events.")
+                st.info("No attendance data available.")
         else:
-            st.error(f"Failed to fetch most attended events: {most_attended_response.status_code}")
+            st.error("Failed to fetch most attended events.")
     except Exception:
-        st.error("Error fetching most attended events.")
+        st.error("Error loading event attendance data.")
 
-    st.markdown("### 📩 Support Requests")
-    try:
-        support_response = requests.get(f"{BASE_URL}/supportrequests")
-        if support_response.status_code == 200:
-            support_requests = support_response.json()
-            if isinstance(support_requests, dict):
-                support_requests = [support_requests]
-            if support_requests:
-                df_support = pd.DataFrame(support_requests)
-                st.dataframe(df_support)
-            else:
-                st.write("No active support requests.")
-        else:
-            st.error(f"Failed to fetch support requests: {support_response.status_code}")
-    except Exception:
-        st.error("Error fetching support requests.")
+    st.markdown("---")
 
-    st.markdown("### 📈 Monthly Student Sign-Ups")
-
+    # 📈 Section 3: Monthly Sign-Ups
+    st.subheader("📈 Monthly Student Sign-Ups")
     try:
         res = requests.get(f"{BASE_URL}/signupsbydate")
         if res.status_code == 200:
@@ -113,20 +104,19 @@ if page == "System Health Dashboard":
                     y="StudentCount",
                     markers=True,
                     labels={"Month": "Month", "StudentCount": "Sign-Ups"},
-                    title="📈 Monthly Student Sign-Ups"
                 )
-
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.info("No sign-up data available to display.")
+                st.info("No sign-up data available.")
         else:
             st.error(f"Failed to fetch sign-up history: {res.status_code}")
     except Exception as e:
-        st.error(f"Error fetching or rendering chart: {e}")
+        st.error(f"Error rendering monthly sign-up chart: {e}")
 
+    st.markdown("---")
 
-    st.markdown("### 🌐 Student–Club Engagement Network")
-
+    # 🌐 Section 4: Network Graph
+    st.subheader("🌐 Student–Club Engagement Network")
     try:
         response = requests.get(f"{BASE_URL}/engagementnetwork")
         if response.status_code == 200:
@@ -137,24 +127,20 @@ if page == "System Health Dashboard":
             net = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
             net.force_atlas_2based()
 
-            # Add nodes
             for node in nodes:
-                color = "#87CEEB" if "(" in node else "#FF7F50"  # Students = blue, Clubs = orange
+                color = "#6EC1E4" if "(" in node else "#F4A261"
                 net.add_node(node, label=node, color=color)
 
-            # Add edges with role-based color
             for edge in edges:
-                edge_color = "#DC143C" if edge["type"] == "executive" else "#D3D3D3"  # Red for execs, gray for members
-                edge_label = "Executive" if edge["type"] == "executive" else "Member"
+                edge_type = edge.get("type", "member")
+                edge_color = "#DC143C" if edge_type == "executive" else "#D3D3D3"
+                edge_label = "Executive" if edge_type == "executive" else "Member"
                 net.add_edge(edge["source"], edge["target"], color=edge_color, title=edge_label)
 
-            # Save to /tmp for Docker safety
             html_path = "/tmp/engagement_network.html"
             net.save_graph(html_path)
-
             with open(html_path, "r", encoding="utf-8") as f:
                 html_content = f.read()
-
             components.html(html_content, height=650)
         else:
             st.error(f"Failed to fetch engagement data: {response.status_code}")
@@ -167,87 +153,75 @@ elif page == "API Health":
 
 # ISSUE TRACKER PAGE
 elif page == "Issue Tracker":
-    st.title("🛠️ Issue Tracker")
-    st.caption(f"Data last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    st.title("🛠️ Issue Tracker Dashboard")
+    st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    st.markdown("---")
 
-    st.markdown("### 👤 Students with Incomplete Profiles")
-    try:
-        profiles_response = requests.get(f"{BASE_URL}/studentsincomplete")
-        if profiles_response.status_code == 200:
-            incomplete_profiles = profiles_response.json()
-            if isinstance(incomplete_profiles, dict):
-                incomplete_profiles = [incomplete_profiles]
-            if incomplete_profiles:
-                df_profiles = pd.DataFrame(incomplete_profiles)
-                st.dataframe(df_profiles)
+    # 🔎 Section 1: Student Registration Issues
+    st.subheader("👤 Incomplete Student Data")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("**Students with Incomplete Profiles**")
+        try:
+            profiles_response = requests.get(f"{BASE_URL}/studentsincomplete")
+            if profiles_response.status_code == 200:
+                data = profiles_response.json()
+                if isinstance(data, dict):
+                    data = [data]
+                if data:
+                    st.dataframe(pd.DataFrame(data))
+                else:
+                    st.info("No students with incomplete profiles.")
             else:
-                st.write("No students with incomplete profiles.")
-        else:
-            st.error(f"Failed to fetch incomplete profiles: {profiles_response.status_code}")
-    except Exception:
-        st.error("Error fetching incomplete profiles.")
+                st.error(f"Failed to fetch: {profiles_response.status_code}")
+        except Exception:
+            st.error("Error loading profile data.")
 
-    st.markdown("### 📋 Clubs with Incomplete Registrations (Last 7 Days)")
-    try:
-        registrations_response = requests.get(f"{BASE_URL}/incompleteregistrations")
-        if registrations_response.status_code == 200:
-            incomplete_registrations = registrations_response.json()
-            if isinstance(incomplete_registrations, dict):
-                incomplete_registrations = [incomplete_registrations]
-            if incomplete_registrations:
-                df_registrations = pd.DataFrame(incomplete_registrations)
-                st.dataframe(df_registrations)
+    with col2:
+        st.markdown("**Clubs with Incomplete Registrations (Last 7 Days)**")
+        try:
+            reg_response = requests.get(f"{BASE_URL}/incompleteregistrations")
+            if reg_response.status_code == 200:
+                data = reg_response.json()
+                if isinstance(data, dict):
+                    data = [data]
+                if data:
+                    st.dataframe(pd.DataFrame(data))
+                else:
+                    st.info("No recent incomplete registrations.")
             else:
-                st.write("No incomplete registrations in the last 7 days.")
-        else:
-            st.error(f"Failed to fetch incomplete registrations: {registrations_response.status_code}")
-    except Exception:
-        st.error("Error fetching incomplete registrations.")
+                st.error(f"Failed to fetch: {reg_response.status_code}")
+        except Exception:
+            st.error("Error loading registration data.")
 
-    st.markdown("### 📩 Support Requests")
+    st.markdown("---")
+
+    # 🧩 Section 2: Support Insights
+    st.subheader("📩 Support Requests Overview")
+
     try:
         support_response = requests.get(f"{BASE_URL}/supportrequests")
         if support_response.status_code == 200:
-            support_requests = support_response.json()
-            if isinstance(support_requests, dict):
-                support_requests = [support_requests]
-            if support_requests:
-                df_support = pd.DataFrame(support_requests)
+            support_data = support_response.json()
+            if isinstance(support_data, dict):
+                support_data = [support_data]
+            if support_data:
+                df_support = pd.DataFrame(support_data)
+
+                st.markdown("**Raw Support Request Table**")
                 st.dataframe(df_support)
-            else:
-                st.write("No active support requests.")
-        else:
-            st.error(f"Failed to fetch support requests: {support_response.status_code}")
-    except Exception:
-        st.error("Error fetching support requests.")
 
-    st.markdown("### 🛠️ Support Request Distribution by Type")
-
-    try:
-        support_response = requests.get(f"{BASE_URL}/supportrequests")
-        if support_response.status_code == 200:
-            support_requests = support_response.json()
-            if isinstance(support_requests, dict):
-                support_requests = [support_requests]
-            if support_requests:
-                df_support = pd.DataFrame(support_requests)
-
-                # Group by Support Type
+                st.markdown("**🧁 Distribution by Type (Pie Chart)**")
                 type_counts = df_support["SupportType"].value_counts().reset_index()
                 type_counts.columns = ["Support Type", "Requests"]
-
-                # Create pie chart
-                fig = px.pie(
-                    type_counts,
-                    names="Support Type",
-                    values="Requests",
-                    hole=0.3  # Optional: makes it a donut chart
-                )
-
-                st.plotly_chart(fig, use_container_width=True)
+                fig_pie = px.pie(type_counts, names="Support Type", values="Requests", hole=0.3)
+                st.plotly_chart(fig_pie, use_container_width=True)
             else:
-                st.info("No support requests to show.")
+                st.info("No support requests found.")
         else:
-            st.error(f"Failed to fetch support requests: {support_response.status_code}")
+            st.error(f"Support API error: {support_response.status_code}")
     except Exception as e:
-        st.error(f"Error rendering support request pie chart: {e}")
+        st.error(f"Support data error: {e}")
+
+    st.markdown("---")
