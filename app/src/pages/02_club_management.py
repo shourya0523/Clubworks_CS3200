@@ -9,11 +9,10 @@ st.set_page_config(page_title="Club Management Dashboard", layout="wide")
 
 if 'nuid' in st.session_state:
     nuid = st.session_state['nuid']
-    # Make the GET request
+
     response = requests.get(f'{BASE_URL}/pres/profile/{nuid}')
     response.raise_for_status()
     
-    # Parse the JSON response
     data = response.json()
     
     if data and isinstance(data, list) and len(data) > 0:
@@ -21,17 +20,13 @@ if 'nuid' in st.session_state:
         CLUB_NAME = data[0].get("ClubName")
         FIRST_NAME = data[0].get("FirstName")
         POSITIONS = data[0].get("Positions")
-        
-        # Display the extracted variables
-        st.write("**Extracted Variables:**")
-        st.write("Club ID:", CLUB_ID)
+
 else:
     st.switch_page('Home.py')
 
 st.title("Club Management Dashboard")
 
 
-# To create the buttons for Create Event and Make Request
 st.markdown("---")
 st.subheader("Club Actions")
 
@@ -41,9 +36,8 @@ if st.button("➕ Create Event"):
 
 
 if st.button("➕ Make Request"):
-    st.switch_page("make_request.py")
+    st.switch_page("pages/make_request.py")
 
-# Create Tabs
 tab1, tab2, tab3 = st.tabs(["📅 Attendance", "📇 Members", "🗣️ Feedback"])
 
 # ---------------------------

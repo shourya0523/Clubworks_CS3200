@@ -13,3 +13,6 @@ plotly
 seaborn
 scikit-learn
 shap
+plotly.express
+pyvis
+Jinja2

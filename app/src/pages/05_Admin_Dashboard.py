@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import requests
 from datetime import datetime
+import altair as alt
+from pyvis.network import Network
+import streamlit.components.v1 as components
 
 st.set_page_config(layout='wide')
 
@@ -52,26 +55,54 @@ if page == "System Health Dashboard":
     except Exception:
         st.error("Error fetching events past month.")
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric(label="Total Students", value=total_students)
-    col2.metric(label="Total Clubs", value=total_clubs)
-    col3.metric(label="Total Events", value=total_events)
-    col4.metric(label="Events This Month", value=events_past_month)
+    st.markdown("### 🌐 Student–Club Engagement Network")
 
-    st.markdown("### 🏆 Top 5 Most Attended Events")
     try:
-        most_attended_response = requests.get(f"{BASE_URL}/mostattended")
-        if most_attended_response.status_code == 200:
-            most_attended = most_attended_response.json()
-            if most_attended:
-                for idx, event in enumerate(most_attended, start=1):
-                    st.write(f"{idx}. **{event['EventName']}** — {event['AttendanceCount']} attendees")
-            else:
-                st.write("No data available for most attended events.")
+        res = requests.get(f"{BASE_URL}/engagementnetwork")
+        if res.status_code == 200:
+            data = res.json()
+            nodes = data["nodes"]
+            edges = data["edges"]
+
+            net = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
+            net.force_atlas_2based()
+
+            for node in nodes:
+                color = "#FF7F50" if "@" not in node else "#87CEEB"
+                net.add_node(node, label=node, color=color)
+
+            for edge in edges:
+                net.add_edge(edge["source"], edge["target"])
+
+            net.save_graph("engagement_network.html")
+            components.html(open("engagement_network.html", "r", encoding="utf-8").read(), height=620)
+
         else:
-            st.error(f"Failed to fetch most attended events: {most_attended_response.status_code}")
-    except Exception:
-        st.error("Error fetching most attended events.")
+            st.error(f"Failed to fetch network data: {res.status_code}")
+    except Exception as e:
+        st.error(f"Error rendering network graph: {e}")
+
+
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric(label="Total Students", value=total_students)
+        col2.metric(label="Total Clubs", value=total_clubs)
+        col3.metric(label="Total Events", value=total_events)
+        col4.metric(label="Events This Month", value=events_past_month)
+
+        st.markdown("### 🏆 Top 5 Most Attended Events")
+        try:
+            most_attended_response = requests.get(f"{BASE_URL}/mostattended")
+            if most_attended_response.status_code == 200:
+                most_attended = most_attended_response.json()
+                if most_attended:
+                    for idx, event in enumerate(most_attended, start=1):
+                        st.write(f"{idx}. **{event['EventName']}** — {event['AttendanceCount']} attendees")
+                else:
+                    st.write("No data available for most attended events.")
+            else:
+                st.error(f"Failed to fetch most attended events: {most_attended_response.status_code}")
+        except Exception:
+            st.error("Error fetching most attended events.")
 
 # API HEALTH PAGE
 elif page == "API Health":
@@ -149,3 +180,32 @@ elif page == "Issue Tracker":
             st.error(f"Failed to fetch support requests: {support_response.status_code}")
     except Exception:
         st.error("Error fetching support requests.")
+
+    st.markdown("### 📈 User Sign-Ups Over Time")
+
+    try:
+        res = requests.get(f"{BASE_URL}/signupsbydate")
+        if res.status_code == 200:
+            signup_data = res.json()
+            df_signups = pd.DataFrame(signup_data)
+
+            if not df_signups.empty:
+                df_signups["JoinDate"] = pd.to_datetime(df_signups["JoinDate"])
+
+                line_chart = alt.Chart(df_signups).mark_line(point=True).encode(
+                    x=alt.X("JoinDate:T", title="Join Date"),
+                    y=alt.Y("StudentCount:Q", title="Sign-Ups"),
+                    tooltip=["JoinDate", "StudentCount"]
+                ).properties(
+                    width=700,
+                    height=400,
+                    title="Daily Student Sign-Ups"
+                )
+
+                st.altair_chart(line_chart, use_container_width=True)
+            else:
+                st.info("No sign-up data available to display.")
+        else:
+            st.error(f"Failed to fetch sign-up history: {res.status_code}")
+    except Exception:
+        st.error("Error fetching user sign-up data.")
