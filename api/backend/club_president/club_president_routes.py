@@ -237,8 +237,8 @@ def load_event(eventid):
         SELECT e.EventID, e.Name, e.Location, e.StartTime, e.EndTime,
                i.ImageLink AS PosterImgLink, et.EventType
         FROM   Events e
-        JOIN   Images     i  ON e.PosterImg = i.ImageID
-        JOIN   EventTypes et ON e.Type      = et.EventTypeID
+        JOIN   Images i  ON e.PosterImg = i.ImageID
+        JOIN   EventTypes et ON e.Type = et.EventTypeID
         WHERE  e.EventID = %s
         ''',
         (eventid,)
