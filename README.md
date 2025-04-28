@@ -2,7 +2,6 @@
 
 <div align="center">
   <img src="https://img.shields.io/badge/Status-In%20Development-yellow" alt="Status: In Development">
-  <img src="https://img.shields.io/badge/Course-CS%203200-blue" alt="Course: CS 3200">
   <img src="https://img.shields.io/badge/Spring-2025-green" alt="Spring 2025">
 </div>
 
